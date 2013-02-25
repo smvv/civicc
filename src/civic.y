@@ -26,14 +26,15 @@ int yylex();
 %error-verbose
 %locations
 
-%union {
-    ast_node *node;
-    //ast_block *block;
-    char *type;
-}
+//%union {
+//    ast_node *node;
+//    ast_block *block;
+//    ast_block *block;
+//}
 
-%token TEXTERN TEXPORT TBASIC_TYPE TVOID TIDENT TINT TFLOAT TRETURN
-%token TFOR TDO TWHILE TIF TELSE TTRUE TFALSE TLOGIC_OR TLOGIC_AND
+%token TEXTERN TEXPORT TRETURN TFOR TDO TWHILE TIF TELSE
+%token TBOOL_TYPE TVOID_TYPE TINT_TYPE TFLOAT_TYPE TINT TFLOAT TIDENT
+%token TTRUE TFALSE TLOGIC_OR TLOGIC_AND
 %token TEQ TNEQ TLESS TLEQ TGREAT TGEQ TPLUS TMIN TMUL TDIV TMOD
 
 // Operator precedence for mathematical operators
@@ -69,7 +70,7 @@ func_def : func_header '{' func_body '}'
          | TEXPORT func_header '{' func_body '}'
          ;
 
-func_header : TVOID TIDENT '(' func_params ')'
+func_header : TVOID_TYPE TIDENT '(' func_params ')'
             | type TIDENT '(' func_params ')'
             ;
 
@@ -81,7 +82,7 @@ func_param_list : param
                 | func_param_list ',' param
                 ;
 
-//ret_type : TVOID | type ;
+//ret_type : TVOID_TYPE | type ;
 
 global_dec : TEXTERN type TIDENT ';' ;
 
@@ -95,7 +96,7 @@ global_def : type TIDENT assign_expr ';'
 
 assign_expr : /* empty */ | '=' expr ;
 
-type : "int" | "float" | "bool" ;
+type : TINT_TYPE | TFLOAT_TYPE | TBOOL_TYPE ;
 
 param : type TIDENT ;
 
@@ -119,8 +120,8 @@ statement : TIDENT '=' expr ';'
           | TIF '(' expr ')' block TELSE block
           | TWHILE '(' expr ')' block
           | TDO block TWHILE '(' expr ')' ';'
-          | TFOR '(' "int" TIDENT '=' expr ',' expr ')' block
-          | TFOR '(' "int" TIDENT '=' expr ',' expr ',' expr ')' block
+          | TFOR '(' TINT_TYPE TIDENT '=' expr ',' expr ')' block
+          | TFOR '(' TINT_TYPE TIDENT '=' expr ',' expr ',' expr ')' block
           ;
 
 block : '{' statements '}'

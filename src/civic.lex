@@ -2,8 +2,6 @@
 #include "ast.h"
 #include "civic_parser.h"
 
-#define YYSTYPE void *
-
 int yycolumn = 0;
 
 #define YY_USER_ACTION \
@@ -25,8 +23,10 @@ int yycolumn = 0;
 
 \n                     yycolumn = 0;
 
-bool|int|float         yylval.type = strdup(yytext);
-void                   yylval.type = strdup(yytext); return TVOID;
+bool                   return TBOOL_TYPE;
+int                    return TINT_TYPE;
+float                  return TFLOAT_TYPE;
+void                   return TVOID_TYPE;
 
 "false"                return TFALSE;
 "true"                 return TTRUE;
@@ -50,7 +50,7 @@ void                   yylval.type = strdup(yytext); return TVOID;
 ">"                    return TGREAT;
 ">="                   return TGEQ;
 
-[-+*/%(){};]            return yytext[0];
+[-+*/%(){};=,!]         return yytext[0];
 
 [a-zA-Z_][a-zA-Z0-9_]* return TIDENT;
 [0-9]+\.[0-9]*         return TFLOAT;
