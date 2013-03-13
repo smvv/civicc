@@ -49,6 +49,9 @@ $(BUILD_DIR)%: $(BUILD_DIR)%.o | $(TGT_DIR)
 
 $(BUILD_DIR)%_lex.c: %.lex | $(TGT_DIR)
 	flex -o $@ $^
+	# resolve a warning in lexer.c by casting appropriately
+	sed -i -e 's/for ( yyl = 0; yyl < yyleng; ++yyl )/for ( yyl = 0; yyl < (int)yyleng; ++yyl )/g' $@
+	sed -i -e 's/for ( i = 0; i < _yybytes_len; ++i )/for ( i = 0; i < (int)_yybytes_len; ++i )/g' $@
 
 $(BUILD_DIR)%_parser.c: %.y | $(TGT_DIR)
 	bison --debug --defines=${@:.c=.h} -o $@ $^
