@@ -49,8 +49,9 @@ void                   return TVOID_TYPE;
 "<="                   return TLEQ;
 ">"                    return TGREAT;
 ">="                   return TGEQ;
+"!"                    return TNOT;
 
-[-+*/%(){};=,!]         return yytext[0];
+[-+*/%(){};=,]         return yytext[0];
 
 [a-zA-Z_][a-zA-Z0-9_]* return TIDENT;
 [0-9]+\.[0-9]*         return TFLOAT;

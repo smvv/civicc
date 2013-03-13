@@ -32,19 +32,23 @@ int yylex();
 //    ast_block *block;
 //}
 
-%token TEXTERN TEXPORT TRETURN TFOR TDO TWHILE TIF TELSE
+%token TEXTERN TEXPORT TRETURN TFOR TDO TWHILE TIF TELSE TCAST
 %token TBOOL_TYPE TVOID_TYPE TINT_TYPE TFLOAT_TYPE TINT TFLOAT TIDENT
-%token TTRUE TFALSE TLOGIC_OR TLOGIC_AND
+%token TTRUE TFALSE TLOGIC_OR TLOGIC_AND TNOT
 %token TEQ TNEQ TLESS TLEQ TGREAT TGEQ TPLUS TMIN TMUL TDIV TMOD
 
 // Operator precedence for mathematical operators
 %right '='
+%left TLOGIC_OR
+%left TLOGIC_AND
 %left TOR
 %left TAND
-%left TNOT
 %left TLESS TLEQ TGREAT TGEQ TNEQ TEQ
-%left TPLUS TMINUS
+%left TPLUS TMIN
 %left TMUL TMOD TDIV
+%right TUMIN TNOT TCAST
+%nonassoc TIF
+%nonassoc TELSE
 
 %start program
 
@@ -82,27 +86,34 @@ func_param_list : param
                 | func_param_list ',' param
                 ;
 
-//ret_type : TVOID_TYPE | type ;
-
 global_dec : TEXTERN type TIDENT ';' ;
 
 global_def : type TIDENT assign_expr ';'
            | TEXPORT type TIDENT assign_expr ';'
            ;
 
-//export : /* empty */
-//       | TEXPORT
-//       ;
+assign_expr : /* empty */
+            | '=' expr
+            ;
 
-assign_expr : /* empty */ | '=' expr ;
-
-type : TINT_TYPE | TFLOAT_TYPE | TBOOL_TYPE ;
+type : TINT_TYPE
+     | TFLOAT_TYPE
+     | TBOOL_TYPE
+     ;
 
 param : type TIDENT ;
 
 /* --- Syntax of CiviC statement language ---------------------------------- */
 
-func_body : var_decs statements return ;
+local_func_def : func_header '{' func_body '}' ;
+
+local_func_defs : /* empty */
+                | local_func_def local_func_defs
+                ;
+
+func_body : var_decs local_func_defs statements
+          | var_decs local_func_defs statements TRETURN expr ';' ;
+
 
 var_decs : /* empty */
          | var_decs var_dec
@@ -116,8 +127,8 @@ statements : /* empty */
 
 statement : TIDENT '=' expr ';'
           | TIDENT '(' expr_list ')' ';'
-          | TIF '(' expr ')' block
-          | TIF '(' expr ')' block TELSE block
+          | TIF '(' expr ')' block %prec TIF
+          | TIF '(' expr ')' block TELSE block %prec TELSE
           | TWHILE '(' expr ')' block
           | TDO block TWHILE '(' expr ')' ';'
           | TFOR '(' TINT_TYPE TIDENT '=' expr ',' expr ')' block
@@ -128,60 +139,42 @@ block : '{' statements '}'
       | statement
       ;
 
-return : TRETURN expr ';' ;
-
 /* --- Syntax of CiviC expression language --------------------------------- */
 
 expr : '(' expr ')'
-     | mon_op expr
-     | expr bin_op expr
-     | '(' type ')' expr
+     | TMIN expr %prec TUMIN
+     | TNOT expr
+     | expr TPLUS expr
+     | expr TMIN expr
+     | expr TMUL expr
+     | expr TDIV expr
+     | expr TMOD expr
+     | expr TEQ expr
+     | expr TNEQ expr
+     | expr TLESS expr
+     | expr TLEQ expr
+     | expr TGREAT expr
+     | expr TGEQ expr
+     | expr TLOGIC_AND expr
+     | expr TLOGIC_OR expr
+     | expr TAND expr
+     | expr TOR expr
+     | '(' type ')' expr %prec TCAST
      | TIDENT '(' expr_list ')'
      | TIDENT
      | const
      ;
 
-expr_list : /* empty */
-          | expr
-          | expr_list ',' expr
-          ;
-
-bin_op : arith_op
-       | rel_op
-       | logic_op
-       ;
-
-arith_op : TPLUS
-         | TMIN
-         | TMUL
-         | TDIV
-         | TMOD
-         ;
-
-rel_op : TEQ
-       | TNEQ
-       | TLESS
-       | TLEQ
-       | TGREAT
-       | TGEQ
-       ;
-
-logic_op : TLOGIC_AND
-         | TLOGIC_OR
-         ;
-
-mon_op : TMIN
-       | '!'
-       ;
-
-const : bool_const
+const : TTRUE
+      | TFALSE
       | TINT
       | TFLOAT
       ;
 
-bool_const : TTRUE
-           | TFALSE
-           ;
+expr_list : /* empty */
+          | expr
+          | expr_list ',' expr
+          ;
 
 %%
 
