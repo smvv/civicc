@@ -39,10 +39,14 @@ int main(int argc, const char *argv[])
 
     ast_node *root = ast_new_node(NODE_ROOT, (ast_data_type){.sval = "root"});
 
-    if (!root)
-        return 1;
-
     int result = yyparse(root);
 
-    return result;
+    if (result)
+        return result;
+
+    printf("root children: %u\n", root ? root->nary : 0 );
+
+    // TODO: print AST
+
+    return 0;
 }

@@ -1,6 +1,9 @@
 #ifndef GUARD_AST_NODE__
 
 #include <stdlib.h>
+#include <stdint.h>
+
+#define AST_NODE_BUFFER_SIZE 16
 
 typedef union {
     int ival;
@@ -9,23 +12,33 @@ typedef union {
 } ast_data_type;
 
 typedef struct ast_node {
-    char type;
-    char nary;
-    struct ast_node *children;
+    uint32_t type;
+    uint32_t nary;
+    struct ast_node **children;
     ast_data_type data;
 } ast_node;
 
 typedef enum {
+    // Packed in 4 bits
     NODE_ROOT,
-} node_type;
+    NODE_FN_HEAD,
+    NODE_GBL_DEC,
+    NODE_GBL_DEF,
+    NODE_PARAM,
+} ast_node_type;
 
 typedef enum {
-    TYPE_UNKNOWN,
-    TYPE_VOID,
-    TYPE_BOOL,
-    TYPE_INT,
-    TYPE_FLOAT,
-} ast_ident_type;
+    // Packed in 2 bits
+    NODE_FLAG_EXTERN = 0x20,
+    NODE_FLAG_EXPORT = 0x40,
+
+    // Packed in 3 bits
+    NODE_FLAG_VOID = 0x80,
+    NODE_FLAG_BOOL = 0x100,
+    NODE_FLAG_INT = 0x180,
+    NODE_FLAG_FLOAT = 0x200,
+
+} ast_node_flag;
 
 typedef enum {
     OP_NEG,
@@ -47,20 +60,15 @@ typedef enum {
     OP_LOR,
 } ast_op_type;
 
-static inline ast_node *ast_new_node(node_type type, ast_data_type data)
-{
-    ast_node *root = malloc(sizeof(ast_node));
+ast_node *ast_new_node(ast_node_type type, ast_data_type data);
+ast_node *ast_node_append(ast_node *parent, ast_node *child);
+ast_node *ast_flag_set(ast_node *node, unsigned int type);
 
-    if (!root)
-        return NULL;
+void ast_node_print(ast_node *node);
+char *ast_node_format(ast_node *node);
 
-    root->type = type;
-    root->data = data;
-
-    return root;
-}
-
-const char *ast_ident_type_name(ast_ident_type type);
+const char *ast_node_flag_name(ast_node_flag flag);
+const char *ast_node_type_name(ast_node_type type);
 const char *ast_op_type_name(ast_op_type type);
 
 #define GUARD_AST_NODE__
