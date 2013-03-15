@@ -4,6 +4,7 @@
 #include "ast.h"
 
 extern int yyparse(ast_node *root);
+extern int yylex_destroy();
 extern int yydebug;
 extern FILE *yyin;
 
@@ -41,12 +42,18 @@ int main(int argc, const char *argv[])
 
     int result = yyparse(root);
 
+    fclose(yyin);
+
+    yylex_destroy();
+
     if (result)
         return result;
 
     printf("root children: %u\n", root ? root->nary : 0 );
 
     // TODO: print AST
+
+    ast_free_node(root);
 
     return 0;
 }
