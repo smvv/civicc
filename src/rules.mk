@@ -3,6 +3,7 @@ OBJECTS := \
 	$(b)civic_parser.o \
 	$(b)civic_lex.o \
 	$(b)ast.o \
+	$(b)ast_printer.o \
 
 
 $(OBJECTS): CFLAGS += -I$(b) -I$(s)

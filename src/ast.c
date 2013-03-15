@@ -1,8 +1,10 @@
-#include "ast.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
 #include <inttypes.h>
+
+#include "ast.h"
+#include "ast_printer.h"
 
 static const char *ast_node_type_names[] = {
     "block",
@@ -96,66 +98,6 @@ const char *ast_op_type_name(ast_op_type type)
     return ast_op_type_names[type];
 }
 
-char *ast_node_format(ast_node *node)
-{
-    if (!node)
-        return NULL;
-
-    char *buf = malloc(256 * sizeof(char));
-
-    if (!buf)
-        return NULL;
-
-    int i = 0, j;
-    const char *msg;
-
-    msg = ast_modifier_name(AST_MODIFIER(node));
-    j = strlen(msg);
-
-    strncpy(buf + i, msg, j);
-    i += j;
-
-    if (j) {
-        buf[i] = ' ';
-        i++;
-    }
-
-    msg = ast_data_type_name(AST_DATA_TYPE(node));
-    j = strlen(msg);
-
-    strncpy(buf + i, msg, j);
-    i += j;
-
-    if (i) {
-        buf[i] = ' ';
-        i++;
-    }
-
-    msg = ast_node_type_name(AST_NODE_TYPE(node));
-    j = strlen(msg);
-
-    strncpy(buf + i, msg, j);
-    i += j;
-
-    buf[i] = 0;
-
-    assert(i < 256);
-
-    return buf;
-}
-
-void ast_node_print(ast_node *node)
-{
-    char *msg = ast_node_format(node);
-
-    if (msg) {
-        printf("[%s; c=%d]", msg, node->nary);
-        free(msg);
-    } else {
-        printf("(nil)");
-    }
-}
-
 ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data)
 {
     ast_node *node = malloc(sizeof(ast_node));
@@ -168,9 +110,9 @@ ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data)
     node->nary = 0;
     node->children = NULL;
 
-    printf("new: ");
-    ast_node_print(node);
-    printf("\n");
+    //printf("new: ");
+    //ast_node_print(node);
+    //printf("\n");
 
     return node;
 }
@@ -211,11 +153,11 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child)
     if (!parent)
         return NULL;
 
-    printf("append: ");
-    ast_node_print(child);
-    printf(" to: ");
-    ast_node_print(parent);
-    printf("\n");
+    //printf("append: ");
+    //ast_node_print(child);
+    //printf(" to: ");
+    //ast_node_print(parent);
+    //printf("\n");
 
     if (!child)
         return parent;

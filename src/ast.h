@@ -81,9 +81,6 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child);
 ast_node *ast_flag_set(ast_node *node, unsigned int type);
 void ast_free_node(ast_node *node);
 
-void ast_node_print(ast_node *node);
-char *ast_node_format(ast_node *node);
-
 const char *ast_modifier_name(ast_modifier_flag flag);
 const char *ast_data_type_name(ast_data_type_flag flag);
 const char *ast_node_type_name(ast_node_type_flag flag);

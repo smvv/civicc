@@ -2,15 +2,47 @@
 #include <string.h>
 
 #include "ast.h"
+#include "ast_printer.h"
 
 extern int yyparse(ast_node *root);
 extern int yylex_destroy();
 extern int yydebug;
 extern FILE *yyin;
 
+ast_node *parse_file(const char *filename)
+{
+    ast_node *root;
+
+    if (strncmp(filename, "-", 2) == 0)
+        yyin = stdin;
+    else
+        yyin = fopen(filename, "r");
+
+    if (!yyin) {
+        perror("fopen");
+        return NULL;
+    }
+
+    root = ast_new_node(NODE_BLOCK, (ast_data_type){.sval = NULL});
+
+    int result = yyparse(root);
+
+    fclose(yyin);
+
+    yylex_destroy();
+
+    if (result)
+        return NULL;
+
+    return root;
+}
+
 int main(int argc, const char *argv[])
 {
     int i;
+    ast_node *root;
+
+    int dump_ast = 0;
 
     if (argc < 2) {
         printf("Usage: %s [OPTIONS] <civic_file>\n", argv[0]);
@@ -24,34 +56,18 @@ int main(int argc, const char *argv[])
 
             switch (argv[i][1]) {
                 case 'd': yydebug = 1; break;
+                case 't': dump_ast = 1; break;
             }
         }
     }
 
-    if (strncmp(argv[i], "-", 2) == 0)
-        yyin = stdin;
-    else
-        yyin = fopen(argv[i], "r");
+    root = parse_file(argv[i]);
 
-    if (!yyin) {
-        perror("fopen");
+    if (!root)
         return 1;
-    }
 
-    ast_node *root = ast_new_node(NODE_BLOCK, (ast_data_type){.sval = NULL});
-
-    int result = yyparse(root);
-
-    fclose(yyin);
-
-    yylex_destroy();
-
-    if (result)
-        return result;
-
-    printf("root children: %u\n", root ? root->nary : 0 );
-
-    // TODO: print AST
+    if (dump_ast)
+        ast_print_tree(root, 0);
 
     ast_free_node(root);
 
