@@ -4,6 +4,14 @@
 #include "ast.h"
 #include "ast_printer.h"
 
+const char *usage_msg =
+"Usage: %s [OPTIONS] <civic_file>\n"
+"\n"
+"Options:\n"
+"  -b  Print bison parser debug information to stdout.\n"
+"  -t  Dump AST tree to stdout.\n"
+;
+
 extern int yyparse(ast_node *root);
 extern int yylex_destroy();
 extern int yydebug;
@@ -45,7 +53,7 @@ int main(int argc, const char *argv[])
     int dump_ast = 0;
 
     if (argc < 2) {
-        printf("Usage: %s [OPTIONS] <civic_file>\n", argv[0]);
+        printf(usage_msg, argv[0]);
         return 1;
     }
 
@@ -55,7 +63,7 @@ int main(int argc, const char *argv[])
                 break;
 
             switch (argv[i][1]) {
-                case 'd': yydebug = 1; break;
+                case 'b': yydebug = 1; break;
                 case 't': dump_ast = 1; break;
             }
         }
