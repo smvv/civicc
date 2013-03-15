@@ -23,7 +23,7 @@ struct ast_node {
 
 typedef enum {
     // Packed in 4 bits
-    NODE_ROOT,
+    NODE_BLOCK,
     NODE_FN_HEAD,
     NODE_FN_BODY,
     NODE_VAR_DEC,
@@ -88,6 +88,10 @@ const char *ast_modifier_name(ast_modifier_flag flag);
 const char *ast_data_type_name(ast_data_type_flag flag);
 const char *ast_node_type_name(ast_node_type_flag flag);
 const char *ast_op_type_name(ast_op_type type);
+
+#define AST_NODE_TYPE(node) ((node)->type & 0xf)
+#define AST_DATA_TYPE(node) (((node)->type >> 6) & 0x7)
+#define AST_MODIFIER(node) (((node)->type >> 4) & 0x3)
 
 #define GUARD_AST_NODE__
 #endif

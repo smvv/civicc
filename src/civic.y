@@ -138,7 +138,7 @@ func_header : TVOID_TYPE TIDENT '(' func_params ')'
               { $$ = APPEND(TYPE(NEW(FN_HEAD, STR($2)), $1), $4); }
             ;
 
-func_params : /* empty */ { $$ = NULL; }
+func_params : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
             | func_params func_param_list { $$ = APPEND($2, $1); }
             ;
 
@@ -172,7 +172,7 @@ param : type TIDENT { $$ = TYPE(NEW(PARAM, STR($2)), $1); } ;
 
 local_func_def : func_header '{' func_body '}' ;
 
-local_func_defs : /* empty */ { $$ = NULL; }
+local_func_defs : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
                 | local_func_def local_func_defs { $$ = APPEND($2, $1); }
                 ;
 
@@ -182,7 +182,7 @@ func_body : var_decs local_func_defs statements
             { $$ = NEW_FN_BODY($1, $2, $3, $5); }
           ;
 
-var_decs : /* empty */ { $$ = NULL; }
+var_decs : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
          | var_decs var_dec { $$ = APPEND($1, $2); }
          ;
 
@@ -190,7 +190,7 @@ var_dec : type TIDENT assign_expr ';'
           { $$ = APPEND(TYPE(NEW(VAR_DEC, STR($2)), $1), $3); }
         ;
 
-statements : /* empty */ { $$ = NULL; }
+statements : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
            | statements statement { $$ = APPEND($1, $2); }
            ;
 
@@ -248,7 +248,7 @@ const : TTRUE { $$ = NEW_BOOL(1); }
       | TFLOAT { $$ = NEW_FLOAT(yyval.d); }
       ;
 
-expr_list : /* empty */ { $$ = NULL; }
+expr_list : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
           | expr { $$ = $1; }
           | expr_list ',' expr { $$ = APPEND($1, $3); }
           ;

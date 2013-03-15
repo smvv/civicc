@@ -38,7 +38,7 @@ int main(int argc, const char *argv[])
         return 1;
     }
 
-    ast_node *root = ast_new_node(NODE_ROOT, (ast_data_type){.sval = "root"});
+    ast_node *root = ast_new_node(NODE_BLOCK, (ast_data_type){.sval = NULL});
 
     int result = yyparse(root);
 

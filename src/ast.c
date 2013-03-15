@@ -2,9 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <inttypes.h>
 
 static const char *ast_node_type_names[] = {
-    "root",
+    "block",
     "func_head",
     "func_body",
     "var_dec",
@@ -60,7 +61,7 @@ static const char *ast_op_type_names[] = {
 const char *ast_node_type_name(ast_node_type_flag flag)
 {
     if (flag > sizeof(ast_node_type_names) / sizeof(char *)) {
-        printf("node type (%d) > %lu", flag, sizeof(ast_node_type_names) /
+        printf("node type (%d) > %zu", flag, sizeof(ast_node_type_names) /
                 sizeof(char *));
         return "";
     }
@@ -71,7 +72,7 @@ const char *ast_node_type_name(ast_node_type_flag flag)
 const char *ast_modifier_name(ast_modifier_flag flag)
 {
     if (flag > sizeof(ast_modifier_names) / sizeof(char *)) {
-        printf("modifier (%d) > %lu", flag, sizeof(ast_modifier_names) /
+        printf("modifier (%d) > %zu", flag, sizeof(ast_modifier_names) /
                 sizeof(char *));
         return "";
     }
@@ -82,7 +83,7 @@ const char *ast_modifier_name(ast_modifier_flag flag)
 const char *ast_data_type_name(ast_data_type_flag flag)
 {
     if (flag > sizeof(ast_data_type_names) / sizeof(char *)) {
-        printf("node flag (%d) > %lu", flag, sizeof(ast_data_type_names) /
+        printf("node flag (%d) > %zu", flag, sizeof(ast_data_type_names) /
                 sizeof(char *));
         return "";
     }
@@ -108,7 +109,7 @@ char *ast_node_format(ast_node *node)
     int i = 0, j;
     const char *msg;
 
-    msg = ast_modifier_name((node->type >> 4) & 0x3);
+    msg = ast_modifier_name(AST_MODIFIER(node));
     j = strlen(msg);
 
     strncpy(buf + i, msg, j);
@@ -119,7 +120,7 @@ char *ast_node_format(ast_node *node)
         i++;
     }
 
-    msg = ast_data_type_name((node->type >> 6) & 0x7);
+    msg = ast_data_type_name(AST_DATA_TYPE(node));
     j = strlen(msg);
 
     strncpy(buf + i, msg, j);
@@ -130,7 +131,7 @@ char *ast_node_format(ast_node *node)
         i++;
     }
 
-    msg = ast_node_type_name(node->type & 0xf);
+    msg = ast_node_type_name(AST_NODE_TYPE(node));
     j = strlen(msg);
 
     strncpy(buf + i, msg, j);
@@ -188,8 +189,18 @@ void ast_free_node(ast_node *node)
         free(node->children);
     }
 
-    if (node->data) {
-        free(node->data);
+    if (node->data.sval) {
+        switch (AST_NODE_TYPE(node)) {
+            case NODE_FN_HEAD:
+            case NODE_VAR_DEC:
+            case NODE_VAR_DEF:
+            case NODE_PARAM:
+            case NODE_ASSIGN:
+            case NODE_CALL:
+            case NODE_FOR:
+                free(node->data.sval);
+            break;
+        }
     }
 
     free(node);
