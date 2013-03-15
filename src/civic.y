@@ -190,7 +190,7 @@ var_dec : type TIDENT assign_expr ';'
           { $$ = APPEND(TYPE(NEW(VAR_DEC, STR($2)), $1), $3); }
         ;
 
-statements : /* empty */ { $$ = NULL }
+statements : /* empty */ { $$ = NULL; }
            | statements statement { $$ = APPEND($1, $2); }
            ;
 
