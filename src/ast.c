@@ -120,6 +120,7 @@ ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data)
     node->data = data;
     node->nary = 0;
     node->children = NULL;
+    node->parent = NULL;
 
     return node;
 }
@@ -177,19 +178,27 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child)
 
     parent->children[parent->nary++] = child;
 
+    child->parent = parent;
+
     return parent;
 }
 
-ast_node *ast_node_remove(ast_node *parent, unsigned int index)
+ast_node *ast_node_remove(ast_node *parent, ast_node *node)
 {
+    size_t index;
+
+    for (index = 0; index < parent->nary; index++)
+        if (parent->children[index] == node)
+            break;
+
     assert(index < parent->nary);
 
     ast_node *child = parent->children[index];
 
-    memmove(parent->children + index, parent->children + index + 1,
-            parent->nary - index - 1);
-
     parent->nary--;
+
+    memmove(parent->children + index, parent->children + index + 1,
+            (parent->nary - index) * sizeof(ast_node *));
 
     return child;
 }

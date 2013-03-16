@@ -17,6 +17,7 @@ typedef union {
 struct ast_node {
     uint32_t type;
     uint32_t nary;
+    struct ast_node *parent;
     struct ast_node **children;
     ast_data_type data;
 };
@@ -91,7 +92,7 @@ typedef enum {
 
 ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data);
 ast_node *ast_node_append(ast_node *parent, ast_node *child);
-ast_node *ast_node_remove(ast_node *parent, unsigned int index);
+ast_node *ast_node_remove(ast_node *parent, ast_node *node);
 ast_node *ast_flag_set(ast_node *node, unsigned int type);
 void ast_free_node(ast_node *node);
 
@@ -99,6 +100,44 @@ const char *ast_modifier_name(ast_modifier_flag flag);
 const char *ast_data_type_name(ast_data_type_flag flag);
 const char *ast_node_type_name(ast_node_type_flag flag);
 const char *ast_op_type_name(ast_op_type type);
+
+#define NODE_STACK_SIZE 1024
+
+typedef struct {
+    ast_node **data;
+    unsigned int items;
+    unsigned int size;
+} node_stack;
+
+node_stack *node_stack_new();
+void node_stack_free(node_stack *stack);
+void node_stack_push(node_stack *stack, ast_node *node);
+ast_node *node_stack_pop(node_stack *stack);
+int node_stack_empty(node_stack *stack);
+
+#define AST_TRAVERSE_START(root, node) \
+    ast_node *node = root; \
+    node_stack *stack = node_stack_new(); \
+    do {\
+        unsigned int _c; \
+        if (!node) { \
+            if (node_stack_empty(stack)) \
+                break; \
+            node = node_stack_pop(stack); \
+            if (!node) \
+                break; \
+        }
+
+#define AST_TRAVERSE_END(root, node) \
+        if (node) { \
+            for (_c = 1; _c < node->nary; _c++) \
+                node_stack_push(stack, node->children[_c]); \
+            node = node->nary ? node->children[0] : NULL; \
+        } \
+        if (!node && !node_stack_empty(stack)) \
+            node = node_stack_pop(stack); \
+    } while(node); \
+    node_stack_free(stack);
 
 #define GUARD_AST_NODE__
 #endif

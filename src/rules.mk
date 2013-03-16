@@ -4,6 +4,8 @@ OBJECTS := \
 	$(b)civic_lex.o \
 	$(b)ast.o \
 	$(b)ast_printer.o \
+	$(b)phases_preprocess.o \
+	$(b)node_stack.o \
 
 
 $(OBJECTS): CFLAGS += -I$(b) -I$(s)

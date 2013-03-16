@@ -3,6 +3,7 @@
 
 #include "ast.h"
 #include "ast_printer.h"
+#include "phases.h"
 
 const char *usage_msg =
 "Usage: %s [OPTIONS] <civic_file>\n"
@@ -16,6 +17,31 @@ extern int yyparse(ast_node *root);
 extern int yylex_destroy();
 extern int yydebug;
 extern FILE *yyin;
+
+void preprocess_tree(ast_node *root, int dump_ast)
+{
+    size_t i;
+    unsigned int changed;
+
+    if (dump_ast) {
+        printf("=== Preprocess tree ===\n");
+        ast_print_tree(root, 0);
+    }
+
+    pass_fn passes[] = {
+        &pass_prune_empty_nodes,
+    };
+
+    do {
+        changed = 0;
+
+        for (i = 0; i < sizeof(passes) / sizeof(pass_fn); i++)
+            changed |= passes[i](root);
+
+        if (changed && dump_ast)
+            ast_print_tree(root, 0);
+    } while(changed);
+}
 
 ast_node *parse_file(const char *filename)
 {
@@ -74,8 +100,7 @@ int main(int argc, const char *argv[])
     if (!root)
         return 1;
 
-    if (dump_ast)
-        ast_print_tree(root, 0);
+    preprocess_tree(root, dump_ast);
 
     ast_free_node(root);
 
