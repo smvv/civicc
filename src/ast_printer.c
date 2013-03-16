@@ -73,6 +73,13 @@ size_t ast_node_format(ast_node *node, char *buf, size_t buflen)
 
         APPEND(" return=%u", !!(AST_MODIFIER(node) & NODE_FLAG_RETURN));
     break;
+    case NODE_FOR:
+    case NODE_WHILE:
+        msg = ast_node_type_name(AST_NODE_TYPE(node));
+        i += _ast_node_format_add(msg, strlen(msg), buf + i, buflen - i);
+
+        APPEND(" %s =", node->data.sval);
+    break;
     default:
         msg = ast_node_type_name(AST_NODE_TYPE(node));
         i += _ast_node_format_add(msg, strlen(msg), buf + i, buflen - i);
