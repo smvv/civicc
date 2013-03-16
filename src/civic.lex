@@ -53,20 +53,10 @@ void                   return TVOID_TYPE;
 
 [-+*/%(){};=,]         return yytext[0];
 
-[a-zA-Z_][a-zA-Z0-9_]* return TIDENT;
-[0-9]+\.[0-9]*         return TFLOAT;
-[0-9]+                 return TINT;
+[a-zA-Z_][a-zA-Z0-9_]* yylval.str = strdup(yytext); return TIDENT;
+[0-9]+\.[0-9]*         yylval.d = atof(yytext); return TFLOAT;
+[0-9]+                 yylval.i = atoi(yytext); return TINT;
 
 .                      { printf("unknown char %c ignored.\n", yytext[0]); }
 
 %%
-
-//"\+"                   return TPLUS;
-//"\-"                   return TMIN;
-//"\*"                   return TMUL;
-//"/"                    return TDIV;
-//"%"                    return TMOD;
-
-//"&&"                   return TLOGIC_AND;
-//"\|\|"                 return TLOGIC_OR;
-

@@ -29,6 +29,11 @@ static const char *ast_modifier_names[] = {
     "",
     "extern",
     "export",
+    "extern export",
+    "return",
+    "extern return",
+    "export return",
+    "extern export return",
 };
 
 static const char *ast_data_type_names[] = {
@@ -62,6 +67,8 @@ static const char *ast_op_type_names[] = {
 
 const char *ast_node_type_name(ast_node_type_flag flag)
 {
+    flag >>= AST_NODE_TYPE_SHIFT;
+
     if (flag > sizeof(ast_node_type_names) / sizeof(char *)) {
         printf("node type (%d) > %zu", flag, sizeof(ast_node_type_names) /
                 sizeof(char *));
@@ -73,6 +80,8 @@ const char *ast_node_type_name(ast_node_type_flag flag)
 
 const char *ast_modifier_name(ast_modifier_flag flag)
 {
+    flag >>= AST_MODIFIER_SHIFT;
+
     if (flag > sizeof(ast_modifier_names) / sizeof(char *)) {
         printf("modifier (%d) > %zu", flag, sizeof(ast_modifier_names) /
                 sizeof(char *));
@@ -84,6 +93,8 @@ const char *ast_modifier_name(ast_modifier_flag flag)
 
 const char *ast_data_type_name(ast_data_type_flag flag)
 {
+    flag >>= AST_DATA_TYPE_SHIFT;
+
     if (flag > sizeof(ast_data_type_names) / sizeof(char *)) {
         printf("node flag (%d) > %zu", flag, sizeof(ast_data_type_names) /
                 sizeof(char *));
@@ -110,10 +121,6 @@ ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data)
     node->nary = 0;
     node->children = NULL;
 
-    //printf("new: ");
-    //ast_node_print(node);
-    //printf("\n");
-
     return node;
 }
 
@@ -132,17 +139,21 @@ void ast_free_node(ast_node *node)
     }
 
     if (node->data.sval) {
-        switch (AST_NODE_TYPE(node)) {
-            case NODE_FN_HEAD:
-            case NODE_VAR_DEC:
-            case NODE_VAR_DEF:
-            case NODE_PARAM:
-            case NODE_ASSIGN:
-            case NODE_CALL:
-            case NODE_FOR:
-                free(node->data.sval);
-            break;
-        }
+        if (AST_NODE_TYPE(node) == NODE_CONST && AST_DATA_TYPE(node) ==
+                NODE_FLAG_IDENT)
+            free(node->data.sval);
+        else
+            switch (AST_NODE_TYPE(node)) {
+                case NODE_FN_HEAD:
+                case NODE_VAR_DEC:
+                case NODE_VAR_DEF:
+                case NODE_PARAM:
+                case NODE_ASSIGN:
+                case NODE_CALL:
+                case NODE_FOR:
+                    free(node->data.sval);
+                break;
+            }
     }
 
     free(node);
@@ -152,12 +163,6 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child)
 {
     if (!parent)
         return NULL;
-
-    //printf("append: ");
-    //ast_node_print(child);
-    //printf(" to: ");
-    //ast_node_print(parent);
-    //printf("\n");
 
     if (!child)
         return parent;
@@ -173,6 +178,20 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child)
     parent->children[parent->nary++] = child;
 
     return parent;
+}
+
+ast_node *ast_node_remove(ast_node *parent, unsigned int index)
+{
+    assert(index < parent->nary);
+
+    ast_node *child = parent->children[index];
+
+    memmove(parent->children + index, parent->children + index + 1,
+            parent->nary - index - 1);
+
+    parent->nary--;
+
+    return child;
 }
 
 ast_node *ast_flag_set(ast_node *node, unsigned int type)

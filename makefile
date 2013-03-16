@@ -1,7 +1,7 @@
 include config.mk
 
 #CC += -faddress-sanitizer -fno-omit-frame-pointer
-CFLAGS := -O3 -Wall -Wextra -Werror -MD $(CFLAGS) -g -ggdb -fPIC
+CFLAGS := -O3 -Wall -Wextra -Werror -MD $(CFLAGS) -g -ggdb -fPIC -std=gnu99
 LDFLAGS := -Wl,-O1 -Wl,--as-needed $(LDFLAGS)
 # -fprofile-arcs -ftest-coverage
 

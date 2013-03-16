@@ -12,7 +12,7 @@ extern char *yytext;
 #define TYPE(node, type) (ast_flag_set(node, type))
 #define NEW(type, data) (ast_new_node(NODE_##type, data))
 
-#define STR(data) ((ast_data_type){.sval = data ? strdup(data) : NULL})
+#define STR(data) ((ast_data_type){.sval = data})
 #define INT(data) ((ast_data_type){.ival = data})
 #define NODE(data) ((ast_data_type){.nval = data})
 
@@ -27,7 +27,10 @@ extern char *yytext;
         APPEND( \
             APPEND( \
                 APPEND( \
-                    NEW(FN_BODY, (ast_data_type){.sval = NULL}), \
+                    ((return) ? MARK( \
+                    NEW(FN_BODY, (ast_data_type){.sval = NULL}) \
+                    , RETURN) : \
+                    NEW(FN_BODY, (ast_data_type){.sval = NULL})), \
                     vars), \
                 defs), \
             stmts), \
@@ -45,8 +48,8 @@ extern char *yytext;
         step \
     )
 
-#define NEW_INT(data) MARK(NEW(CONST, (ast_data_type){.ival = data}), INT)
 #define NEW_BOOL(data) MARK(NEW(CONST, (ast_data_type){.ival = data}), BOOL)
+#define NEW_INT(data) MARK(NEW(CONST, (ast_data_type){.ival = data}), INT)
 #define NEW_FLOAT(data) MARK(NEW(CONST, (ast_data_type){.dval = data}), FLOAT)
 #define NEW_IDENT(data) MARK(NEW(CONST, (ast_data_type){.sval = data}), IDENT)
 }
