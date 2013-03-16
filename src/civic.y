@@ -153,11 +153,15 @@ global_dec : TEXTERN type TIDENT ';'
              { $$ = MARK(TYPE(NEW(VAR_DEC, STR($3)), $2), EXTERN); }
            ;
 
-global_def : type TIDENT assign_expr ';'
-             { $$ = TYPE(NEW(VAR_DEF, STR($2)), $1); APPEND($$, $3); }
-           | TEXPORT type TIDENT assign_expr ';'
+global_def : type TIDENT ';'
+             { $$ = TYPE(NEW(VAR_DEC, STR($2)), $1); }
+           | type TIDENT '=' expr ';'
+             { $$ = TYPE(NEW(VAR_DEF, STR($2)), $1); APPEND($$, $4); }
+           | TEXPORT type TIDENT ';'
+             { $$ = MARK(TYPE(NEW(VAR_DEC, STR($3)), $2), EXPORT); }
+           | TEXPORT type TIDENT '=' expr ';'
              { $$ = MARK(TYPE(NEW(VAR_DEF, STR($3)), $2), EXPORT);
-               APPEND($$, $4); }
+               APPEND($$, $5); }
            ;
 
 assign_expr : /* empty */ { $$ = NULL; }
