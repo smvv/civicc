@@ -4,3 +4,6 @@ Mile Stone 2:
 Mile Stone 6:
  - Remove the declaration part from for-loops induction variables.
  - Separate the local variable declaration of the form "int[m,n] a;".
+
+Mile Stone 7 / 8:
+ - Verify that variable and function shadowing is allowed in CiviC.
