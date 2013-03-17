@@ -49,12 +49,19 @@ static unsigned int type_check_ident(node_stack *scope, ast_node *node)
 
 static unsigned int scope_level(ast_node *node)
 {
-    size_t i;
+    size_t i = 0;
 
     if (!node)
         return 0;
 
-    for (i = 0; node->parent; node = node->parent)
+    // The return value of a function is sometimes not contained in a
+    // NODE_BLOCK node. Therefore, check if the function has a return value and
+    // that the current node is the return node.
+    if (AST_NODE_TYPE(node->parent) == NODE_FN_BODY &&
+            node->parent->nary == 4 && node->parent->children[3] == node)
+        i++;
+
+    for (; node->parent; node = node->parent)
         if (AST_NODE_TYPE(node) == NODE_BLOCK)
             i++;
 
