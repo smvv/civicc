@@ -183,6 +183,36 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child)
     return parent;
 }
 
+ast_node *ast_node_insert(ast_node *parent, ast_node *child, size_t index)
+{
+    if (!parent)
+        return NULL;
+
+    if (!child)
+        return parent;
+
+    if (!parent->nary || (parent->nary) % (AST_NODE_BUFFER_SIZE) == 0) {
+        parent->children = realloc(parent->children, (parent->nary +
+                    (AST_NODE_BUFFER_SIZE)) * sizeof(ast_node *));
+
+        if (!parent->children)
+            return NULL;
+    }
+
+    assert(index <= parent->nary);
+
+    memmove(parent->children + index + 1, parent->children + index,
+            (parent->nary - index) * sizeof(ast_node *));
+
+    parent->children[index] = child;
+
+    parent->nary++;
+
+    child->parent = parent;
+
+    return parent;
+}
+
 ast_node *ast_node_remove(ast_node *parent, ast_node *node)
 {
     size_t index;

@@ -101,7 +101,7 @@ int yylex();
 %start program
 
 %type <node> decl func_dec func_def func_header func_body func_params
-%type <node> func_param_list param global_dec global_def assign_expr expr
+%type <node> func_param_list param global_dec global_def expr
 %type <node> var_decs local_func_defs statements local_func_def var_dec
 %type <node> statement expr_list block const
 %type <str> TIDENT
@@ -164,10 +164,6 @@ global_def : type TIDENT ';'
                APPEND($$, $5); }
            ;
 
-assign_expr : /* empty */ { $$ = NULL; }
-            | '=' expr { $$ = $2; }
-            ;
-
 type : TINT_TYPE { $$ = NODE_FLAG_INT; }
      | TFLOAT_TYPE { $$ = NODE_FLAG_FLOAT; }
      | TBOOL_TYPE { $$ = NODE_FLAG_BOOL; }
@@ -177,7 +173,9 @@ param : type TIDENT { $$ = TYPE(NEW(PARAM, STR($2)), $1); } ;
 
 /* --- Syntax of CiviC statement language ---------------------------------- */
 
-local_func_def : func_header '{' func_body '}' ;
+local_func_def : func_header '{' func_body '}'
+                 { $$ = APPEND($1, $3); }
+               ;
 
 local_func_defs : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
                 | local_func_def local_func_defs { $$ = APPEND($2, $1); }
@@ -193,8 +191,10 @@ var_decs : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
          | var_decs var_dec { $$ = APPEND($1, $2); }
          ;
 
-var_dec : type TIDENT assign_expr ';'
-          { $$ = APPEND(TYPE(NEW(VAR_DEC, STR($2)), $1), $3); }
+var_dec : type TIDENT ';'
+          { $$ = TYPE(NEW(VAR_DEC, STR($2)), $1); }
+        |  type TIDENT '=' expr ';'
+          { $$ = APPEND(TYPE(NEW(VAR_DEF, STR($2)), $1), $4); }
         ;
 
 statements : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }

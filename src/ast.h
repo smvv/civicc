@@ -70,6 +70,19 @@ typedef enum {
 #define AST_DATA_TYPE(node) ((node)->type & AST_DATA_TYPE_MASK)
 #define AST_MODIFIER(node) ((node)->type & AST_MODIFIER_MASK)
 
+#define AST_NODE_TYPE_RESET(node, new_type) \
+    (node->type = (node)->type & ~AST_NODE_TYPE_MASK & new_type)
+
+#define AST_DATA_TYPE_RESET(node, new_type) \
+    (node->type = (node)->type & ~AST_DATA_TYPE_MASK & new_type)
+
+#define AST_MODIFIER_RESET(node, new_type) \
+    (node->type = (node)->type & ~AST_MODIFIER_MASK & new_type)
+
+#define NODE_BLOCK_VARS 0
+#define NODE_BLOCK_FUNCS 1
+#define NODE_BLOCK_STMTS 2
+
 typedef enum {
     OP_NEG,
     OP_NOT,
@@ -92,6 +105,7 @@ typedef enum {
 
 ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data);
 ast_node *ast_node_append(ast_node *parent, ast_node *child);
+ast_node *ast_node_insert(ast_node *parent, ast_node *child, size_t index);
 ast_node *ast_node_remove(ast_node *parent, ast_node *node);
 ast_node *ast_flag_set(ast_node *node, unsigned int type);
 void ast_free_node(ast_node *node);

@@ -25,11 +25,12 @@ void preprocess_tree(ast_node *root, int dump_ast)
 
     if (dump_ast) {
         printf("=== Preprocess tree ===\n");
-        ast_print_tree(root, 0);
+        ast_print_tree(root);
     }
 
     pass_fn passes[] = {
-        &pass_prune_empty_nodes,
+        //&pass_prune_empty_nodes,
+        &pass_split_var_init,
     };
 
     do {
@@ -39,7 +40,7 @@ void preprocess_tree(ast_node *root, int dump_ast)
             changed |= passes[i](root);
 
         if (changed && dump_ast)
-            ast_print_tree(root, 0);
+            ast_print_tree(root);
     } while(changed);
 }
 

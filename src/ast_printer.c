@@ -117,17 +117,17 @@ void ast_node_print(const char *msg, ast_node *node)
     free(buf);
 }
 
-void ast_print_tree(ast_node *node, unsigned int level)
+static void ast_print_tree_r(ast_node *node, unsigned int level)
 {
     unsigned int i;
+
+    unsigned int buflen = 256;
+    char *buf;
 
     if (!node)
         return;
 
-    assert(level < 80);
-
-    unsigned int buflen = 256;
-    char *buf = malloc(buflen * sizeof(char));
+    buf = malloc(buflen * sizeof(char));
 
     if (!buf)
         return;
@@ -144,11 +144,14 @@ void ast_print_tree(ast_node *node, unsigned int level)
         printf("%s(nil)\n", buf);
     }
 
-    if (node->children) {
-        for (i = 0; i < node->nary; i++) {
-            ast_print_tree(node->children[i], level + 1);
-        }
-    }
+    if (node->children)
+        for (i = 0; i < node->nary; i++)
+            ast_print_tree_r(node->children[i], level + 1);
 
     free(buf);
+}
+
+void ast_print_tree(ast_node *root)
+{
+    ast_print_tree_r(root, 0);
 }
