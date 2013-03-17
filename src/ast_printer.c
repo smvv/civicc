@@ -8,10 +8,7 @@
 static size_t _ast_node_format_add(const char *msg, size_t msglen, char *buf,
         size_t buflen)
 {
-    if (msglen >= buflen)
-        msglen = buflen;
-
-    strncpy(buf, msg, msglen);
+    strncpy(buf, msg, msglen > buflen ? buflen : msglen);
 
     return msglen;
 }

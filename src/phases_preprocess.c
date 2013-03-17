@@ -91,6 +91,18 @@ unsigned int pass_split_var_init(ast_node *root)
         ast_node_remove(node->parent, node);
         ast_free_node(node);
         node = NULL;
+    } else if (AST_NODE_TYPE(node) == NODE_FOR) {
+        ast_node *var_dec = ast_new_node(NODE_VAR_DEC,
+                (ast_data_type){.sval = strdup(node->data.sval)});
+
+        ast_flag_set(var_dec, NODE_FLAG_INT);
+
+        block = get_func_body_block(find_func_body(node), NODE_BLOCK_VARS);
+
+        if (!block)
+            return 1;
+
+        ast_node_append(block, var_dec);
     }
 
     AST_TRAVERSE_END(root, node)

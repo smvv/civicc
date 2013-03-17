@@ -1,7 +1,27 @@
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "ast.h"
+#include "ast_helpers.h"
+#include "ast_printer.h"
+
+void ast_error(const char *msg, ast_node *node)
+{
+    ast_node *scope_node = find_func_head(node);
+
+    fprintf(stderr, "\x1b[1;31merror:\x1b[0m ");
+    fprintf(stderr, msg, node ? node->data.sval : "(nil)");
+
+    if (scope_node) {
+        char *scope_msg = malloc(256 * sizeof(char));
+        ast_node_format(scope_node, scope_msg, 256);
+        fprintf(stderr, " in: `%s'.\n", scope_msg);
+        free(scope_msg);
+    } else
+        fprintf(stderr, " in global scope.\n");
+}
+
 
 ast_node *create_global_init(ast_node *root)
 {
@@ -73,4 +93,28 @@ ast_node *get_func_body_block(ast_node *fn_body, size_t b)
     assert(AST_NODE_TYPE(fn_body->children[2]) == NODE_BLOCK);
 
     return fn_body->children[b];
+}
+
+ast_node *find_func_body(ast_node *node)
+{
+    if (!node)
+        return NULL;
+
+    for (; node->parent; node = node->parent)
+        if (AST_NODE_TYPE(node) == NODE_FN_BODY)
+            return node;
+
+    return NULL;
+}
+
+ast_node *find_func_head(ast_node *node)
+{
+    if (!node)
+        return NULL;
+
+    for (; node->parent; node = node->parent)
+        if (AST_NODE_TYPE(node) == NODE_FN_HEAD)
+            return node;
+
+    return NULL;
 }

@@ -9,8 +9,7 @@
 
 #define SCOPE_LEVEL_LIMIT 42
 
-static ast_node *scope_contains_ident(node_stack *scope, char *ident,
-        size_t ident_len)
+static ast_node *scope_contains_ident(node_stack *scope, char *ident)
 {
     size_t i;
 
@@ -18,43 +17,18 @@ static ast_node *scope_contains_ident(node_stack *scope, char *ident,
         return NULL;
 
     for (i = scope->items; i > 0; i--)
-        if (strncmp(scope->data[i - 1]->data.sval, ident, ident_len + 1) == 0)
+        if (strcmp(scope->data[i - 1]->data.sval, ident) == 0)
             return scope->data[i - 1];
-
-    return NULL;
-}
-
-static ast_node *find_func_head(ast_node *node)
-{
-    if (!node)
-        return NULL;
-
-    for (; node->parent; node = node->parent)
-        if (AST_NODE_TYPE(node) == NODE_FN_HEAD)
-            return node;
 
     return NULL;
 }
 
 static unsigned int type_check_ident(node_stack *scope, ast_node *node)
 {
-    char *ident = node->data.sval;
-    size_t ident_len = strlen(node->data.sval);
-
-    ast_node *def_node = scope_contains_ident(scope, ident, ident_len);
+    ast_node *def_node = scope_contains_ident(scope, node->data.sval);
 
     if (!def_node) {
-        ast_node *scope_node = find_func_head(node);
-
-        if (scope_node) {
-            char *scope_msg = malloc(256 * sizeof(char));
-            ast_node_format(scope_node, scope_msg, 256);
-            fprintf(stderr, "error: missing definition of identifier: `%s'"
-                            " used in: `%s'.\n", ident, scope_msg);
-            free(scope_msg);
-        } else
-            fprintf(stderr, "error: missing definition of identifier: `%s'"
-                            " used in global scope.\n", ident);
+        ast_error("missing definition of identifier: `%s'", node);
 
         return 1;
     }
@@ -67,7 +41,7 @@ static unsigned int type_check_ident(node_stack *scope, ast_node *node)
     //            " should be of type `%s'\n", ident,
     //            ast_data_type_name(AST_DATA_TYPE(node)),
     //            ast_data_type_name(AST_DATA_TYPE(def_node)));
-    //    return;
+    //    return 1;
     //}
 
     return 0;
@@ -100,6 +74,57 @@ static node_stack *get_scope(node_stack **scopes, ast_node *node)
         scope--;
 
     return scopes[scope];
+}
+
+static unsigned int detect_duplicated_var(ast_node **stack_data, size_t
+        stack_size, ast_node *node)
+{
+    size_t i;
+
+    if (!stack_data || !node)
+        return 0;
+
+    for (i = 0; i < stack_size; i++)
+        if (strcmp(stack_data[i]->data.sval, node->data.sval) == 0)
+            return 1;
+
+    return 0;
+}
+
+static unsigned int add_scope_vars(node_stack **scopes, size_t scope, ast_node
+        *node)
+{
+    size_t i;
+    unsigned int error = 0;
+
+    node_stack *prev_scope;
+    size_t prev_items;
+    size_t new_items;
+
+    if (!scopes || !node)
+        return 1;
+
+    prev_scope = scopes[scope - 1];
+    prev_items = prev_scope->items;
+    new_items = scopes[scope]->items - prev_items;
+
+    for (i = 0; i < node->nary; i++) {
+        if (AST_NODE_TYPE(node->children[i]) == NODE_VAR_DEC) {
+            if (!detect_duplicated_var(scopes[scope]->data + prev_items,
+                        new_items, node->children[i])) {
+                node_stack_push(scopes[scope], node->children[i]);
+                new_items++;
+                assert(scopes[scope]->items == new_items + prev_items);
+            }
+            else {
+                ast_error("redeclaration of variable `%s'", node->children[i]);
+
+                error = 1;
+            }
+        }
+    }
+
+    return error;
 }
 
 unsigned int pass_context_analysis(ast_node *root)
@@ -143,13 +168,14 @@ unsigned int pass_context_analysis(ast_node *root)
 
         scopes[scope] = node_stack_clone(scopes[scope - 1]);
 
-        for (i = 0; i < vars_block->nary; i++)
-            if (AST_NODE_TYPE(vars_block->children[i]) == NODE_VAR_DEC)
-                node_stack_push(scopes[scope], vars_block->children[i]);
+        if (add_scope_vars(scopes, scope, vars_block))
+            error = 1;
+    } else if (AST_NODE_TYPE(node) == NODE_FOR) {
+
     } else if (AST_NODE_TYPE(node) == NODE_ASSIGN
                || (AST_NODE_TYPE(node) == NODE_CONST
                    && AST_DATA_TYPE(node) == NODE_FLAG_IDENT)) {
-        if(!type_check_ident(get_scope(scopes, node), node))
+        if (type_check_ident(get_scope(scopes, node), node))
             error = 1;
     }
 
