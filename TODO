@@ -1,0 +1,6 @@
+Mile Stone 2:
+ - Add support for multi-dimensional arrays.
+
+Mile Stone 6:
+ - Remove the declaration part from for-loops induction variables.
+ - Separate the local variable declaration of the form "int[m,n] a;".
