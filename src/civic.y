@@ -83,18 +83,19 @@ int yylex();
 %token TEXTERN TEXPORT TRETURN TFOR TDO TWHILE TIF TELSE TCAST
 %token TBOOL_TYPE TVOID_TYPE TINT_TYPE TFLOAT_TYPE TINT TFLOAT TIDENT
 %token TTRUE TFALSE TLOGIC_OR TLOGIC_AND TNOT
-%token TEQ TNEQ TLESS TLEQ TGREAT TGEQ TPLUS TMIN TMUL TDIV TMOD
+%token TEQ TNE TLT TLE TGT TGE TADD TSUB TMUL TDIV TMOD
+%token TOPAR TCPAR TOCB TCCB TSEMI TCOMMA TASSIGN
 
 // Operator precedence for mathematical operators
-%right '='
-%left TLOGIC_OR
-%left TLOGIC_AND
+%right TASSIGN
+%left TLOR
+%left TLAND
 %left TOR
 %left TAND
-%left TLESS TLEQ TGREAT TGEQ TNEQ TEQ
-%left TPLUS TMIN
+%left TLT TLE TGT TGE TNE TEQ
+%left TADD TSUB
 %left TMUL TMOD TDIV
-%right TUMIN TNOT TCAST
+%right TNEG TNOT TCAST
 %nonassoc TIF
 %nonassoc TELSE
 
@@ -125,19 +126,19 @@ decl : func_dec
      | global_def
      ;
 
-func_dec : TEXTERN func_header ';'
+func_dec : TEXTERN func_header TSEMI
            { MARK($2, EXTERN); $$ = $2; }
          ;
 
-func_def : func_header '{' func_body '}'
+func_def : func_header TOCB func_body TCCB
            { $$ = APPEND($1, $3); }
-         | TEXPORT func_header '{' func_body '}'
+         | TEXPORT func_header TOCB func_body TCCB
            { MARK($2, EXPORT); $$ = APPEND($2, $4); }
          ;
 
-func_header : TVOID_TYPE TIDENT '(' func_params ')'
+func_header : TVOID_TYPE TIDENT TOPAR func_params TCPAR
               { $$ = APPEND(MARK(NEW(FN_HEAD, STR($2)), VOID), $4); }
-            | type TIDENT '(' func_params ')'
+            | type TIDENT TOPAR func_params TCPAR
               { $$ = APPEND(TYPE(NEW(FN_HEAD, STR($2)), $1), $4); }
             ;
 
@@ -146,20 +147,20 @@ func_params : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
             ;
 
 func_param_list : param
-                | func_param_list ',' param { $$ = APPEND($1, $3); }
+                | func_param_list TCOMMA param { $$ = APPEND($1, $3); }
                 ;
 
-global_dec : TEXTERN type TIDENT ';'
+global_dec : TEXTERN type TIDENT TSEMI
              { $$ = MARK(TYPE(NEW(VAR_DEC, STR($3)), $2), EXTERN); }
            ;
 
-global_def : type TIDENT ';'
+global_def : type TIDENT TSEMI
              { $$ = TYPE(NEW(VAR_DEC, STR($2)), $1); }
-           | type TIDENT '=' expr ';'
+           | type TIDENT TASSIGN expr TSEMI
              { $$ = TYPE(NEW(VAR_DEF, STR($2)), $1); APPEND($$, $4); }
-           | TEXPORT type TIDENT ';'
+           | TEXPORT type TIDENT TSEMI
              { $$ = MARK(TYPE(NEW(VAR_DEC, STR($3)), $2), EXPORT); }
-           | TEXPORT type TIDENT '=' expr ';'
+           | TEXPORT type TIDENT TASSIGN expr TSEMI
              { $$ = MARK(TYPE(NEW(VAR_DEF, STR($3)), $2), EXPORT);
                APPEND($$, $5); }
            ;
@@ -173,7 +174,7 @@ param : type TIDENT { $$ = TYPE(NEW(PARAM, STR($2)), $1); } ;
 
 /* --- Syntax of CiviC statement language ---------------------------------- */
 
-local_func_def : func_header '{' func_body '}'
+local_func_def : func_header TOCB func_body TCCB
                  { $$ = APPEND($1, $3); }
                ;
 
@@ -183,7 +184,7 @@ local_func_defs : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
 
 func_body : var_decs local_func_defs statements
             { $$ = NEW_FN_BODY($1, $2, $3, NULL); }
-          | var_decs local_func_defs statements TRETURN expr ';'
+          | var_decs local_func_defs statements TRETURN expr TSEMI
             { $$ = NEW_FN_BODY($1, $2, $3, $5); }
           ;
 
@@ -191,9 +192,9 @@ var_decs : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
          | var_decs var_dec { $$ = APPEND($1, $2); }
          ;
 
-var_dec : type TIDENT ';'
+var_dec : type TIDENT TSEMI
           { $$ = TYPE(NEW(VAR_DEC, STR($2)), $1); }
-        |  type TIDENT '=' expr ';'
+        |  type TIDENT TASSIGN expr TSEMI
           { $$ = APPEND(TYPE(NEW(VAR_DEF, STR($2)), $1), $4); }
         ;
 
@@ -201,50 +202,50 @@ statements : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
            | statements statement { $$ = APPEND($1, $2); }
            ;
 
-statement : TIDENT '=' expr ';'
+statement : TIDENT TASSIGN expr TSEMI
             { $$ = APPEND(NEW(ASSIGN, STR($1)), $3); }
-          | TIDENT '(' expr_list ')' ';'
+          | TIDENT TOPAR expr_list TCPAR TSEMI
             { $$ = APPEND(NEW(CALL, STR($1)), $3); }
-          | TIF '(' expr ')' block %prec TIF
+          | TIF TOPAR expr TCPAR block %prec TIF
             { $$ = APPEND(NEW(IF, NODE($3)), $5); }
-          | TIF '(' expr ')' block TELSE block %prec TELSE
+          | TIF TOPAR expr TCPAR block TELSE block %prec TELSE
             { $$ = APPEND(APPEND(NEW(IF, NODE($3)), $5), $7); }
-          | TWHILE '(' expr ')' block
+          | TWHILE TOPAR expr TCPAR block
             { $$ = APPEND(NEW(WHILE, NODE($3)), $5); }
-          | TDO block TWHILE '(' expr ')' ';'
+          | TDO block TWHILE TOPAR expr TCPAR TSEMI
             { $$ = APPEND(NEW(DO_WHILE, NODE($2)), $5); }
-          | TFOR '(' TINT_TYPE TIDENT '=' expr ',' expr ')' block
+          | TFOR TOPAR TINT_TYPE TIDENT TASSIGN expr TCOMMA expr TCPAR block
             { $$ = APPEND(NEW_FOR($4, $6, $8, NULL), $10); }
-          | TFOR '(' TINT_TYPE TIDENT '=' expr ',' expr ',' expr ')' block
+          | TFOR TOPAR TINT_TYPE TIDENT TASSIGN expr TCOMMA expr TCOMMA expr TCPAR block
             { $$ = APPEND(NEW_FOR($4, $6, $8, $10), $12); }
           ;
 
-block : '{' statements '}' { $$ = $2; }
+block : TOCB statements TCCB { $$ = $2; }
       | statement { $$ = $1; }
       ;
 
 /* --- Syntax of CiviC expression language --------------------------------- */
 
-expr : '(' expr ')' { $$ = $2; }
-     | TMIN expr %prec TUMIN { $$ = UNARY_OP(NEG, $2); }
+expr : TOPAR expr TCPAR { $$ = $2; }
+     | TSUB expr %prec TNEG { $$ = UNARY_OP(NEG, $2); }
      | TNOT expr { $$ = UNARY_OP(NOT, $2); }
-     | expr TPLUS expr { $$ = BINARY_OP(ADD, $1, $3); }
-     | expr TMIN expr { $$ = BINARY_OP(SUB, $1, $3); }
+     | expr TADD expr { $$ = BINARY_OP(ADD, $1, $3); }
+     | expr TSUB expr { $$ = BINARY_OP(SUB, $1, $3); }
      | expr TMUL expr { $$ = BINARY_OP(MUL, $1, $3); }
      | expr TDIV expr { $$ = BINARY_OP(DIV, $1, $3); }
      | expr TMOD expr { $$ = BINARY_OP(MOD, $1, $3); }
      | expr TEQ expr { $$ = BINARY_OP(EQ, $1, $3); }
-     | expr TNEQ expr { $$ = BINARY_OP(NE, $1, $3); }
-     | expr TLESS expr { $$ = BINARY_OP(LT, $1, $3); }
-     | expr TLEQ expr { $$ = BINARY_OP(LE, $1, $3); }
-     | expr TGREAT expr { $$ = BINARY_OP(GT, $1, $3); }
-     | expr TGEQ expr { $$ = BINARY_OP(GE, $1, $3); }
-     | expr TLOGIC_AND expr { $$ = BINARY_OP(LAND, $1, $3); }
-     | expr TLOGIC_OR expr { $$ = BINARY_OP(LOR, $1, $3); }
+     | expr TNE expr { $$ = BINARY_OP(NE, $1, $3); }
+     | expr TLT expr { $$ = BINARY_OP(LT, $1, $3); }
+     | expr TLE expr { $$ = BINARY_OP(LE, $1, $3); }
+     | expr TGT expr { $$ = BINARY_OP(GT, $1, $3); }
+     | expr TGE expr { $$ = BINARY_OP(GE, $1, $3); }
+     | expr TLAND expr { $$ = BINARY_OP(LAND, $1, $3); }
+     | expr TLOR expr { $$ = BINARY_OP(LOR, $1, $3); }
      | expr TAND expr { $$ = BINARY_OP(AND, $1, $3); }
      | expr TOR expr { $$ = BINARY_OP(OR, $1, $3); }
-     | '(' type ')' expr %prec TCAST { $$ = APPEND(NEW(CAST, INT($2)), $4); }
-     | TIDENT '(' expr_list ')' { $$ = APPEND(NEW(CALL, STR($1)), $3); }
+     | TOPAR type TCPAR expr %prec TCAST { $$ = APPEND(NEW(CAST, INT($2)), $4); }
+     | TIDENT TOPAR expr_list TCPAR { $$ = APPEND(NEW(CALL, STR($1)), $3); }
      | TIDENT { $$ = NEW_IDENT($1); }
      | const { $$ = $1; }
      ;
@@ -257,7 +258,7 @@ const : TTRUE { $$ = NEW_BOOL(1); }
 
 expr_list : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
           | expr { $$ = $1; }
-          | expr_list ',' expr { $$ = APPEND($1, $3); }
+          | expr_list TCOMMA expr { $$ = APPEND($1, $3); }
           ;
 
 %%

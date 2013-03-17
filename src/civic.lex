@@ -44,14 +44,25 @@ void                   return TVOID_TYPE;
 "extern"               return TEXTERN;
 
 "=="                   return TEQ;
-"!="                   return TNEQ;
-"<"                    return TLESS;
-"<="                   return TLEQ;
-">"                    return TGREAT;
-">="                   return TGEQ;
+"!="                   return TNE;
+"<"                    return TLT;
+"<="                   return TLE;
+">"                    return TGT;
+">="                   return TGE;
 "!"                    return TNOT;
 
-[-+*/%(){};=,]         return yytext[0];
+"-"                    return TSUB;
+"+"                    return TADD;
+"*"                    return TMUL;
+"/"                    return TDIV;
+"%"                    return TMOD;
+"("                    return TOPAR;
+")"                    return TCPAR;
+"{"                    return TOCB;
+"}"                    return TCCB;
+";"                    return TSEMI;
+"="                    return TASSIGN;
+","                    return TCOMMA;
 
 [a-zA-Z_][a-zA-Z0-9_]* yylval.str = strdup(yytext); return TIDENT;
 [0-9]+\.[0-9]*         yylval.d = atof(yytext); return TFLOAT;
