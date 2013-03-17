@@ -9,30 +9,24 @@
 
 #define SCOPE_LEVEL_LIMIT 42
 
-static ast_node *scope_contains_ident(node_stack *scope, char *ident)
+static ast_node *scope_contains_ident(node_stack *scope, ast_node *node)
 {
     size_t i;
 
-    if (!scope)
-        return NULL;
+    assert(scope);
 
     for (i = scope->items; i > 0; i--)
-        if (strcmp(scope->data[i - 1]->data.sval, ident) == 0)
+        if (strcmp(scope->data[i - 1]->data.sval, node->data.sval) == 0)
             return scope->data[i - 1];
+
+    ast_error("missing definition of identifier: `%s'", node);
 
     return NULL;
 }
 
+#if 0
 static unsigned int type_check_ident(node_stack *scope, ast_node *node)
 {
-    ast_node *def_node = scope_contains_ident(scope, node->data.sval);
-
-    if (!def_node) {
-        ast_error("missing definition of identifier: `%s'", node);
-
-        return 1;
-    }
-
     if (AST_NODE_TYPE(node) == NODE_ASSIGN)
         return 0;
 
@@ -46,6 +40,7 @@ static unsigned int type_check_ident(node_stack *scope, ast_node *node)
 
     return 0;
 }
+#endif
 
 static unsigned int scope_level(ast_node *node)
 {
@@ -125,7 +120,6 @@ static unsigned int add_scope_vars(node_stack **scopes, size_t scope, ast_node
             }
             else {
                 ast_error("redeclaration of variable `%s'", node->children[i]);
-
                 error = 1;
             }
         }
@@ -166,10 +160,6 @@ unsigned int pass_context_analysis(ast_node *root)
         assert(scope > 0);
         assert(scopes[scope - 1]);
 
-        //ast_node_print("node: %s\n", node->parent);
-        //ast_node_print("block: %s", vars_block);
-        //printf("-> scope level: %d\n", scope);
-
         if (scopes[scope])
             node_stack_free(scopes[scope]);
 
@@ -177,13 +167,17 @@ unsigned int pass_context_analysis(ast_node *root)
 
         if (add_scope_vars(scopes, scope, vars_block))
             error = 1;
-    } else if (AST_NODE_TYPE(node) == NODE_FOR) {
-
     } else if (AST_NODE_TYPE(node) == NODE_ASSIGN
                || (AST_NODE_TYPE(node) == NODE_CONST
                    && AST_DATA_TYPE(node) == NODE_FLAG_IDENT)) {
-        if (type_check_ident(get_scope(scopes, node), node))
+        ast_node *def_node;
+
+        if (!(def_node = scope_contains_ident(get_scope(scopes, node), node)))
             error = 1;
+        else {
+            ast_node_print("def_node: `%s'", def_node);
+            ast_node_print(" of node: `%s'\n", node);
+        }
     }
 
     AST_TRAVERSE_END(root, node)
