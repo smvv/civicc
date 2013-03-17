@@ -88,9 +88,6 @@ size_t ast_node_format(ast_node *node, char *buf, size_t buflen)
 
 #undef APPEND
 
-    if (i && buf[i - 1] != ' ')
-        buf[i++] = ' ';
-
     buf[i] = 0;
 
     assert(i < buflen);

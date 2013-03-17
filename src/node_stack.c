@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "ast.h"
 
 node_stack *node_stack_new()
@@ -20,6 +22,17 @@ void node_stack_free(node_stack *stack)
         free(stack->data);
 
     free(stack);
+}
+
+node_stack *node_stack_clone(node_stack *stack)
+{
+    node_stack *new = node_stack_new();
+
+    memcpy(new, stack, sizeof(node_stack));
+    new->data = malloc(new->size * sizeof(ast_node *));
+    memcpy(new->data, stack->data, stack->items * sizeof(ast_node *));
+
+    return new;
 }
 
 void node_stack_push(node_stack *stack, ast_node *node)
@@ -50,6 +63,17 @@ int node_stack_empty(node_stack *stack)
 {
     if (!stack || stack->items <= 0)
         return 1;
+
+    return 0;
+}
+
+int node_stack_contains(node_stack *stack, ast_node *node)
+{
+    size_t i;
+
+    for (i = 0; i < stack->items; i++)
+        if (stack->data[i] == node)
+            return 1;
 
     return 0;
 }

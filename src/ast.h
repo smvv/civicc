@@ -125,19 +125,21 @@ typedef struct {
 
 node_stack *node_stack_new();
 void node_stack_free(node_stack *stack);
+node_stack *node_stack_clone(node_stack *stack);
 void node_stack_push(node_stack *stack, ast_node *node);
 ast_node *node_stack_pop(node_stack *stack);
 int node_stack_empty(node_stack *stack);
+int node_stack_contains(node_stack *stack, ast_node *node);
 
 #define AST_TRAVERSE_START(root, node) \
     ast_node *node = root; \
-    node_stack *stack = node_stack_new(); \
+    node_stack *_stack = node_stack_new(); \
     do {\
         unsigned int _c; \
         if (!node) { \
-            if (node_stack_empty(stack)) \
+            if (node_stack_empty(_stack)) \
                 break; \
-            node = node_stack_pop(stack); \
+            node = node_stack_pop(_stack); \
             if (!node) \
                 break; \
         }
@@ -145,13 +147,13 @@ int node_stack_empty(node_stack *stack);
 #define AST_TRAVERSE_END(root, node) \
         if (node) { \
             for (_c = 1; _c < node->nary; _c++) \
-                node_stack_push(stack, node->children[_c]); \
+                node_stack_push(_stack, node->children[_c]); \
             node = node->nary ? node->children[0] : NULL; \
         } \
-        if (!node && !node_stack_empty(stack)) \
-            node = node_stack_pop(stack); \
+        if (!node && !node_stack_empty(_stack)) \
+            node = node_stack_pop(_stack); \
     } while(node); \
-    node_stack_free(stack);
+    node_stack_free(_stack);
 
 #define GUARD_AST_NODE__
 #endif

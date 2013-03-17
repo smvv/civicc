@@ -3,9 +3,11 @@ OBJECTS := \
 	$(b)civic_parser.o \
 	$(b)civic_lex.o \
 	$(b)ast.o \
+	$(b)ast_helpers.o \
 	$(b)ast_printer.o \
-	$(b)phases_preprocess.o \
 	$(b)node_stack.o \
+	$(b)phases_preprocess.o \
+	$(b)phases_analysis.o \
 
 
 $(OBJECTS): CFLAGS += -I$(b) -I$(s)

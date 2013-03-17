@@ -18,31 +18,29 @@ extern int yylex_destroy();
 extern int yydebug;
 extern FILE *yyin;
 
-void preprocess_tree(ast_node *root, int dump_ast)
-{
-    size_t i;
-    unsigned int changed;
-
-    if (dump_ast) {
-        printf("=== Preprocess tree ===\n");
-        ast_print_tree(root);
+#define DECLARE_PHASE(name) \
+    unsigned int name##_tree(ast_node *root, int dump_ast) \
+    { \
+        size_t i; \
+        unsigned int error = 0; \
+    \
+        if (dump_ast) { \
+            printf("=== " #name " tree ===\n"); \
+            ast_print_tree(root); \
+        } \
+    \
+        for (i = 0; i < sizeof(name##_passes) / sizeof(pass_fn); i++) \
+            error |= name##_passes[i](root); \
+    \
+        if (!error && dump_ast) \
+            ast_print_tree(root); \
+    \
+        return error; \
     }
 
-    pass_fn passes[] = {
-        //&pass_prune_empty_nodes,
-        &pass_split_var_init,
-    };
-
-    do {
-        changed = 0;
-
-        for (i = 0; i < sizeof(passes) / sizeof(pass_fn); i++)
-            changed |= passes[i](root);
-
-        if (changed && dump_ast)
-            ast_print_tree(root);
-    } while(changed);
-}
+COMPILER_PHASES
+DECLARE_PHASE(preprocess)
+DECLARE_PHASE(analyse)
 
 ast_node *parse_file(const char *filename)
 {
@@ -78,6 +76,7 @@ int main(int argc, const char *argv[])
     ast_node *root;
 
     int dump_ast = 0;
+    int exit_code = 0;
 
     if (argc < 2) {
         printf(usage_msg, argv[0]);
@@ -101,9 +100,18 @@ int main(int argc, const char *argv[])
     if (!root)
         return 1;
 
-    preprocess_tree(root, dump_ast);
+    if (preprocess_tree(root, dump_ast)) {
+        exit_code = 2;
+        goto exit;
+    }
 
+    if (analyse_tree(root, dump_ast)) {
+        exit_code = 3;
+        goto exit;
+    }
+
+exit:
     ast_free_node(root);
 
-    return 0;
+    return exit_code;
 }
