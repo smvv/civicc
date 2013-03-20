@@ -32,15 +32,13 @@ extern FILE *yyin;
         for (i = 0; i < sizeof(name##_passes) / sizeof(pass_fn); i++) \
             error |= name##_passes[i](root); \
     \
-        if (!error && dump_ast) \
-            ast_print_tree(root); \
-    \
         return error; \
     }
 
 COMPILER_PHASES
 DECLARE_PHASE(preprocess)
 DECLARE_PHASE(analyse)
+DECLARE_PHASE(loops)
 
 ast_node *parse_file(const char *filename)
 {
@@ -106,6 +104,11 @@ int main(int argc, const char *argv[])
     }
 
     if (analyse_tree(root, dump_ast)) {
+        exit_code = 3;
+        goto exit;
+    }
+
+    if (loops_tree(root, dump_ast)) {
         exit_code = 3;
         goto exit;
     }

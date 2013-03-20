@@ -8,6 +8,7 @@ OBJECTS := \
 	$(b)node_stack.o \
 	$(b)phases_preprocess.o \
 	$(b)phases_analysis.o \
+	$(b)phases_loops.o \
 
 
 $(OBJECTS): CFLAGS += -I$(b) -I$(s)
