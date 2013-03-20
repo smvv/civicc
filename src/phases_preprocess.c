@@ -49,8 +49,6 @@ unsigned int pass_split_var_init(ast_node *root)
         ast_flag_set(var_dec, AST_DATA_TYPE(node));
 
         if (!parent->parent) {
-            ast_node_print(" == split global var init: %s ==\n", node);
-
             if (!__init && !(__init = create_global_init(root)))
                 return 1;
 
@@ -61,14 +59,12 @@ unsigned int pass_split_var_init(ast_node *root)
             if (!block)
                 return 1;
 
-            ast_node_append(block, ast_new_node(NODE_ASSIGN,
-                        (ast_data_type){.sval = strdup(node->data.sval)}));
+            ast_node_insert(block, ast_new_node(NODE_ASSIGN,
+                        (ast_data_type){.sval = strdup(node->data.sval)}), 0);
 
-            ast_node_append(block->children[block->nary - 1],
-                    ast_node_remove(node, node->children[0]));
+            ast_node_append(block->children[0], ast_node_remove(node,
+                        node->children[0]));
         } else {
-            ast_node_print(" == split var init: %s ==\n", node);
-
             block = get_func_body_block(parent->parent, NODE_BLOCK_VARS);
 
             if (!block)
@@ -81,11 +77,11 @@ unsigned int pass_split_var_init(ast_node *root)
             if (!block)
                 return 1;
 
-            ast_node_append(block, ast_new_node(NODE_ASSIGN,
-                        (ast_data_type){.sval = strdup(node->data.sval)}));
+            ast_node_insert(block, ast_new_node(NODE_ASSIGN,
+                        (ast_data_type){.sval = strdup(node->data.sval)}), 0);
 
-            ast_node_append(block->children[block->nary - 1],
-                    ast_node_remove(node, node->children[0]));
+            ast_node_append(block->children[0], ast_node_remove(node,
+                        node->children[0]));
         }
 
         ast_node_remove(node->parent, node);

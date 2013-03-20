@@ -37,7 +37,7 @@ static const char *ast_modifier_names[] = {
 };
 
 static const char *ast_data_type_names[] = {
-    "",
+    "?",
     "void",
     "bool",
     "int",

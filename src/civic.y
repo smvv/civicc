@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "ast.h"
+#include "ast_printer.h"
 #include <string.h>
 
 extern FILE *yyin;
@@ -102,7 +103,7 @@ int yylex();
 %start program
 
 %type <node> decl func_dec func_def func_header func_body func_params
-%type <node> func_param_list param global_dec global_def expr
+%type <node> param global_dec global_def expr
 %type <node> var_decs local_func_defs statements local_func_def var_dec
 %type <node> statement expr_list block const
 %type <str> TIDENT
@@ -136,19 +137,21 @@ func_def : func_header TOCB func_body TCCB
            { MARK($2, EXPORT); $$ = APPEND($2, $4); }
          ;
 
-func_header : TVOID_TYPE TIDENT TOPAR func_params TCPAR
+func_header : TVOID_TYPE TIDENT TOPAR TCPAR
+              { $$ = APPEND(MARK(NEW(FN_HEAD, STR($2)), VOID),
+                            NEW(BLOCK, NODE(NULL))); }
+            | TVOID_TYPE TIDENT TOPAR func_params TCPAR
               { $$ = APPEND(MARK(NEW(FN_HEAD, STR($2)), VOID), $4); }
+            | type TIDENT TOPAR TCPAR
+              { $$ = APPEND(TYPE(NEW(FN_HEAD, STR($2)), $1),
+                            NEW(BLOCK, NODE(NULL))); }
             | type TIDENT TOPAR func_params TCPAR
               { $$ = APPEND(TYPE(NEW(FN_HEAD, STR($2)), $1), $4); }
             ;
 
-func_params : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
-            | func_params func_param_list { $$ = APPEND($2, $1); }
+func_params : param { $$ = APPEND(NEW(BLOCK, NODE(NULL)), $1); }
+            | func_params TCOMMA param { $$ = APPEND($1, $3); }
             ;
-
-func_param_list : param
-                | func_param_list TCOMMA param { $$ = APPEND($1, $3); }
-                ;
 
 global_dec : TEXTERN type TIDENT TSEMI
              { $$ = MARK(TYPE(NEW(VAR_DEC, STR($3)), $2), EXTERN); }
@@ -257,7 +260,7 @@ const : TTRUE { $$ = NEW_BOOL(1); }
       ;
 
 expr_list : /* empty */ { $$ = NEW(BLOCK, NODE(NULL)); }
-          | expr { $$ = $1; }
+          | expr { $$ = APPEND(NEW(BLOCK, NODE(NULL)), $1); }
           | expr_list TCOMMA expr { $$ = APPEND($1, $3); }
           ;
 

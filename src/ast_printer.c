@@ -48,6 +48,25 @@ size_t ast_node_format(ast_node *node, char *buf, size_t buflen)
         else
             APPEND("%s", node->data.sval);
     break;
+    case NODE_CALL:
+        APPEND("%s(", node->data.sval);
+
+        assert(node->nary == 1);
+        assert(AST_NODE_TYPE(node->children[0]) == NODE_BLOCK);
+
+        for (unsigned int j = 0; j < node->children[0]->nary; j++) {
+            APPEND("$%d,", j);
+        }
+
+        if (buf[i-1] == '(')
+            i++;
+
+        buf[i-1] = ')';
+    break;
+    case NODE_PARAM:
+        APPEND("%s ", ast_data_type_name(AST_DATA_TYPE(node)));
+        APPEND("%s", node->data.sval);
+    break;
     case NODE_FN_HEAD:
         msg = ast_modifier_name(AST_MODIFIER(node));
         i += _ast_node_format_add(msg, strlen(msg), buf + i, buflen - i);
@@ -76,6 +95,12 @@ size_t ast_node_format(ast_node *node, char *buf, size_t buflen)
         i += _ast_node_format_add(msg, strlen(msg), buf + i, buflen - i);
 
         APPEND(" %s =", node->data.sval);
+    break;
+    case NODE_UNARY_OP:
+    case NODE_BIN_OP:
+        msg = ast_node_type_name(AST_NODE_TYPE(node));
+        i += _ast_node_format_add(msg, strlen(msg), buf + i, buflen - i);
+        APPEND(" %s", ast_op_type_name(node->data.ival));
     break;
     default:
         msg = ast_node_type_name(AST_NODE_TYPE(node));

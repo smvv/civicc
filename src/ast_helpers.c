@@ -9,17 +9,20 @@
 void ast_error(const char *msg, ast_node *node)
 {
     ast_node *scope_node = find_func_head(node);
+    size_t buflen = 256;
+    char *buf = malloc(buflen * sizeof(char));
 
     fprintf(stderr, "\x1b[1;31merror:\x1b[0m ");
-    fprintf(stderr, msg, node ? node->data.sval : "(nil)");
+    ast_node_format(node, buf, buflen);
+    fprintf(stderr, msg, buf);
 
     if (scope_node) {
-        char *scope_msg = malloc(256 * sizeof(char));
-        ast_node_format(scope_node, scope_msg, 256);
-        fprintf(stderr, " in: `%s'.\n", scope_msg);
-        free(scope_msg);
+        ast_node_format(scope_node, buf, buflen);
+        fprintf(stderr, " in: `%s'.\n", buf);
     } else
         fprintf(stderr, " in global scope.\n");
+
+    free(buf);
 }
 
 
