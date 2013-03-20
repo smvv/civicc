@@ -1,5 +1,6 @@
 Mile Stone 2:
  - Add support for multi-dimensional arrays.
+ - Add support for single- and multi-line comments.
 
 Mile Stone 6:
  - Remove the declaration part from for-loops induction variables.
