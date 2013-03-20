@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-make -s && valgrind ./civcc $@ || echo -e "\033[1;31mexit code = $?\033[0m"
+make -s && valgrind -q ./civcc $@ || echo -e "\033[1;31mexit code = $?\033[0m"
