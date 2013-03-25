@@ -109,7 +109,7 @@ int main(int argc, const char *argv[])
     }
 
     if (loops_tree(root, dump_ast)) {
-        exit_code = 3;
+        exit_code = 4;
         goto exit;
     }
 
