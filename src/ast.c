@@ -125,19 +125,13 @@ ast_node *ast_new_node(ast_node_type_flag flag, ast_data_type data)
     return node;
 }
 
-void ast_free_node(ast_node *node)
+void ast_free_leaf(ast_node *node)
 {
-    unsigned int i;
-
     if (!node)
         return;
 
-    if (node->children) {
-        for (i = 0; i < node->nary; i++)
-            ast_free_node(node->children[i]);
-
+    if (node->children)
         free(node->children);
-    }
 
     if (node->data.sval) {
         if (AST_NODE_TYPE(node) == NODE_CONST && AST_DATA_TYPE(node) ==
@@ -158,6 +152,21 @@ void ast_free_node(ast_node *node)
     }
 
     free(node);
+}
+
+void ast_free_node(ast_node *node)
+{
+    unsigned int i;
+
+    if (!node)
+        return;
+
+    if (node->children) {
+        for (i = 0; i < node->nary; i++)
+            ast_free_node(node->children[i]);
+    }
+
+    ast_free_leaf(node);
 }
 
 ast_node *ast_node_append(ast_node *parent, ast_node *child)

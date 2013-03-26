@@ -108,6 +108,7 @@ ast_node *ast_node_append(ast_node *parent, ast_node *child);
 ast_node *ast_node_insert(ast_node *parent, ast_node *child, size_t index);
 ast_node *ast_node_remove(ast_node *parent, ast_node *node);
 ast_node *ast_flag_set(ast_node *node, unsigned int type);
+void ast_free_leaf(ast_node *node);
 void ast_free_node(ast_node *node);
 
 const char *ast_modifier_name(ast_modifier_flag flag);

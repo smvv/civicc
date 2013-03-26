@@ -25,9 +25,6 @@ unsigned int pass_for_to_do(ast_node *root)
         assert(AST_NODE_TYPE(node->children[1]) == NODE_CONST);
         assert(AST_DATA_TYPE(node->children[1]) == NODE_FLAG_INT);
 
-        //printf("Found for-node:\n");
-        //ast_print_tree(node);
-
         // Create the initialization statement of the loop counter
         ast_node *loop_counter = ast_new_node(NODE_ASSIGN,
                         (ast_data_type){.sval = strdup(node->data.sval)});
@@ -97,12 +94,6 @@ unsigned int pass_for_to_do(ast_node *root)
         if (!if_stmt)
             return 1;
 
-        //printf("Generated loop_counter:\n");
-        //ast_print_tree(loop_counter);
-
-        //printf("Generated if-statement:\n");
-        //ast_print_tree(if_stmt);
-
         int pos = ast_node_pos(node->parent, node);
 
         // Insert the loop-counter-var at the for-loop's position
@@ -113,7 +104,18 @@ unsigned int pass_for_to_do(ast_node *root)
 
         // Remove the for-loop from the AST
         ast_node_remove(node->parent, node);
-        // TODO: free for-loop node (but not its children!)
+
+        // Free the for-loop start and end constant
+        ast_free_leaf(node->children[0]);
+        ast_free_leaf(node->children[1]);
+
+        // Free the optional for-loop increment constant
+        if (node->nary == 4)
+            ast_free_leaf(node->children[2]);
+
+        // Free for-loop node (but not its children!)
+        ast_free_leaf(node);
+        node = NULL;
     }
 
     AST_TRAVERSE_END(root, node)
