@@ -210,13 +210,13 @@ statement : TIDENT TASSIGN expr TSEMI
           | TIDENT TOPAR expr_list TCPAR TSEMI
             { $$ = APPEND(NEW(CALL, STR($1)), $3); }
           | TIF TOPAR expr TCPAR block %prec TIF
-            { $$ = APPEND(NEW(IF, NODE($3)), $5); }
+            { $$ = APPEND(APPEND(NEW(IF, NODE(NULL)), $3), $5); }
           | TIF TOPAR expr TCPAR block TELSE block %prec TELSE
-            { $$ = APPEND(APPEND(NEW(IF, NODE($3)), $5), $7); }
+            { $$ = APPEND(APPEND(APPEND(NEW(IF, NODE(NULL)), $3), $5), $7); }
           | TWHILE TOPAR expr TCPAR block
-            { $$ = APPEND(NEW(WHILE, NODE($3)), $5); }
+            { $$ = APPEND(APPEND(NEW(WHILE, NODE(NULL)), $3), $5); }
           | TDO block TWHILE TOPAR expr TCPAR TSEMI
-            { $$ = APPEND(NEW(DO_WHILE, NODE($2)), $5); }
+            { $$ = APPEND(APPEND(NEW(DO_WHILE, NODE(NULL)), $5), $2); }
           | TFOR TOPAR TINT_TYPE TIDENT TASSIGN expr TCOMMA expr TCPAR block
             { $$ = APPEND(NEW_FOR($4, $6, $8, NULL), $10); }
           | TFOR TOPAR TINT_TYPE TIDENT TASSIGN expr TCOMMA expr TCOMMA expr TCPAR block
@@ -224,7 +224,7 @@ statement : TIDENT TASSIGN expr TSEMI
           ;
 
 block : TOCB statements TCCB { $$ = $2; }
-      | statement { $$ = $1; }
+      | statement { $$ = APPEND(NEW(BLOCK, NODE(NULL)), $1); }
       ;
 
 /* --- Syntax of CiviC expression language --------------------------------- */

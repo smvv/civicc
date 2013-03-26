@@ -113,6 +113,11 @@ int main(int argc, const char *argv[])
         goto exit;
     }
 
+    if (dump_ast) {
+        printf("=== output tree ===\n");
+        ast_print_tree(root);
+    }
+
 exit:
     ast_free_node(root);
 

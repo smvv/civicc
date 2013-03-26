@@ -121,3 +121,14 @@ ast_node *find_func_head(ast_node *node)
 
     return NULL;
 }
+
+int ast_node_pos(ast_node *parent, ast_node *node)
+{
+    int i;
+
+    for (i = 0; i < (int) parent->nary; i++)
+        if (parent->children[i] == node)
+            return i;
+
+    return -1;
+}
