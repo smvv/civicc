@@ -20,13 +20,49 @@ static void free_for_loop(ast_node *node)
     if (node->nary == 4)
         ast_free_leaf(node->children[2]);
 
-    // Free for-loop node (but not its children!)
+    // Free for-loop node itself
+    ast_free_leaf(node);
+}
+
+static void free_while_loop(ast_node *node)
+{
+    if (!node)
+        return;
+
+    // Free the while-loop node itself
     ast_free_leaf(node);
 }
 
 unsigned int pass_while_to_do(ast_node *root)
 {
-    (void) root;
+    AST_TRAVERSE_START(root, node)
+
+    if (AST_NODE_TYPE(node) == NODE_WHILE) {
+        // Create the body of the loop
+        ast_node *do_stmt = NEW_DO_WHILE();
+        ast_node_append(do_stmt, node->children[0]);
+        ast_node_append(do_stmt, node->children[1]);
+
+        // Create if statement and its condition
+        ast_node *if_stmt = NEW_IF();
+        ast_node_append(if_stmt, ast_node_clone(node->children[0]));
+        ast_node_append(if_stmt, do_stmt);
+
+        if (!if_stmt)
+            return 1;
+
+        // Insert the if-statement before the while-loop node
+        int pos = ast_node_pos(node->parent, node);
+        ast_node_insert(node->parent, if_stmt, pos);
+
+        // Remove the while-loop from the AST and free its memory
+        ast_node_remove(node->parent, node);
+        free_while_loop(node);
+        node = NULL;
+    }
+
+    AST_TRAVERSE_END(root, node)
+
     return 0;
 }
 
