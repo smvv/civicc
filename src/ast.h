@@ -167,6 +167,9 @@ int node_stack_contains(node_stack *stack, ast_node *node);
 #define NEW_BIN_OP(val) \
     ast_new_node(NODE_BIN_OP, (ast_data_type){.ival = (val)})
 
+#define NEW_BLOCK() \
+    ast_new_node(NODE_FOR, (ast_data_type){.nval = NULL})
+
 #define NEW_FOR() \
     ast_new_node(NODE_FOR, (ast_data_type){.nval = NULL})
 

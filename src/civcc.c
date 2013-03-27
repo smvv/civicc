@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "ast.h"
+#include "ast_helpers.h"
 #include "ast_printer.h"
 #include "phases.h"
 
@@ -31,6 +32,8 @@ extern FILE *yyin;
     \
         for (i = 0; i < sizeof(name##_passes) / sizeof(pass_fn); i++) \
             error |= name##_passes[i](root); \
+    \
+        ast_validate(root); \
     \
         return error; \
     }

@@ -7,6 +7,23 @@
 #include "ast_helpers.h"
 #include "ast_printer.h"
 
+static void free_for_loop(ast_node *node)
+{
+    if (!node)
+        return;
+
+    // Free the for-loop start and end constant
+    ast_free_leaf(node->children[0]);
+    ast_free_leaf(node->children[1]);
+
+    // Free the optional for-loop increment constant
+    if (node->nary == 4)
+        ast_free_leaf(node->children[2]);
+
+    // Free for-loop node (but not its children!)
+    ast_free_leaf(node);
+}
+
 unsigned int pass_while_to_do(ast_node *root)
 {
     (void) root;
@@ -18,13 +35,6 @@ unsigned int pass_for_to_do(ast_node *root)
     AST_TRAVERSE_START(root, node)
 
     if (AST_NODE_TYPE(node) == NODE_FOR) {
-
-        assert(node->nary == 3 || node->nary == 4);
-        assert(AST_NODE_TYPE(node->children[0]) == NODE_CONST);
-        assert(AST_DATA_TYPE(node->children[0]) == NODE_FLAG_INT);
-        assert(AST_NODE_TYPE(node->children[1]) == NODE_CONST);
-        assert(AST_DATA_TYPE(node->children[1]) == NODE_FLAG_INT);
-
         // Create the initialization statement of the loop counter
         ast_node *loop_counter = NEW_ASSIGN(strdup(node->data.sval));
         ast_node_append(loop_counter, NEW_INT(node->children[0]->data.ival));
@@ -66,27 +76,15 @@ unsigned int pass_for_to_do(ast_node *root)
         if (!if_stmt)
             return 1;
 
+        // Insert the loop-counter-var at the for-loop's position and the
+        // if-statement after the loop-counter-var
         int pos = ast_node_pos(node->parent, node);
-
-        // Insert the loop-counter-var at the for-loop's position
         ast_node_insert(node->parent, loop_counter, pos);
-
-        // Insert the if-statement after the loop-counter-var
         ast_node_insert(node->parent, if_stmt, pos + 1);
 
-        // Remove the for-loop from the AST
+        // Remove the for-loop from the AST and free its memory
         ast_node_remove(node->parent, node);
-
-        // Free the for-loop start and end constant
-        ast_free_leaf(node->children[0]);
-        ast_free_leaf(node->children[1]);
-
-        // Free the optional for-loop increment constant
-        if (node->nary == 4)
-            ast_free_leaf(node->children[2]);
-
-        // Free for-loop node (but not its children!)
-        ast_free_leaf(node);
+        free_for_loop(node);
         node = NULL;
     }
 

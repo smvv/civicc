@@ -84,16 +84,8 @@ ast_node *get_func_body_block(ast_node *fn_body, size_t b)
     assert(AST_NODE_TYPE(fn_body) == NODE_FN_BODY);
     assert(b <= 3);
 
-    for (i = fn_body->nary; i < 3; i++) {
-        ast_node_append(fn_body, ast_new_node(NODE_BLOCK,
-                (ast_data_type){.sval = NULL}));
-    }
-
-    assert(fn_body->nary == 3 || fn_body->nary == 4);
-
-    assert(AST_NODE_TYPE(fn_body->children[0]) == NODE_BLOCK);
-    assert(AST_NODE_TYPE(fn_body->children[1]) == NODE_BLOCK);
-    assert(AST_NODE_TYPE(fn_body->children[2]) == NODE_BLOCK);
+    for (i = fn_body->nary; i < 3; i++)
+        ast_node_append(fn_body, NEW_BLOCK());
 
     return fn_body->children[b];
 }
@@ -131,4 +123,37 @@ int ast_node_pos(ast_node *parent, ast_node *node)
             return i;
 
     return -1;
+}
+
+void ast_validate(ast_node *root)
+{
+    AST_TRAVERSE_START(root, node)
+
+    switch (AST_NODE_TYPE(node)) {
+    case NODE_FN_BODY:
+        assert(node->nary == 3 || node->nary == 4);
+
+        assert(AST_NODE_TYPE(node->children[0]) == NODE_BLOCK);
+        assert(AST_NODE_TYPE(node->children[1]) == NODE_BLOCK);
+        assert(AST_NODE_TYPE(node->children[2]) == NODE_BLOCK);
+    break;
+
+    case NODE_FOR:
+        assert(node->nary == 3 || node->nary == 4);
+
+        assert(AST_NODE_TYPE(node->children[0]) == NODE_CONST);
+        assert(AST_DATA_TYPE(node->children[0]) == NODE_FLAG_INT);
+        assert(AST_NODE_TYPE(node->children[1]) == NODE_CONST);
+        assert(AST_DATA_TYPE(node->children[1]) == NODE_FLAG_INT);
+
+        if (node->nary == 4) {
+            assert(AST_NODE_TYPE(node->children[2]) == NODE_CONST);
+            assert(AST_DATA_TYPE(node->children[2]) == NODE_FLAG_INT);
+        }
+
+        assert(AST_NODE_TYPE(node->children[node->nary - 1]) == NODE_BLOCK);
+    break;
+    }
+
+    AST_TRAVERSE_END(root, node)
 }

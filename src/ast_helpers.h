@@ -10,5 +10,7 @@ ast_node *find_func_head(ast_node *node);
 
 int ast_node_pos(ast_node *parent, ast_node *node);
 
+void ast_validate(ast_node *root);
+
 #define GUARD_AST_HELPERS__
 #endif
