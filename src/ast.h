@@ -156,5 +156,32 @@ int node_stack_contains(node_stack *stack, ast_node *node);
     } while(node); \
     node_stack_free(_stack);
 
+#define NEW_IDENT(val) \
+    ast_flag_set(ast_new_node(NODE_CONST, (ast_data_type){.sval = (val)}), \
+                 NODE_FLAG_IDENT)
+
+#define NEW_INT(val) \
+    ast_flag_set(ast_new_node(NODE_CONST, (ast_data_type){.ival = (val)}), \
+                 NODE_FLAG_INT)
+
+#define NEW_BIN_OP(val) \
+    ast_new_node(NODE_BIN_OP, (ast_data_type){.ival = (val)})
+
+#define NEW_FOR() \
+    ast_new_node(NODE_FOR, (ast_data_type){.nval = NULL})
+
+#define NEW_WHILE() \
+    ast_new_node(NODE_WHILE, (ast_data_type){.nval = NULL})
+
+#define NEW_DO_WHILE() \
+    ast_new_node(NODE_DO_WHILE, (ast_data_type){.nval = NULL})
+
+#define NEW_IF() \
+    ast_new_node(NODE_IF, (ast_data_type){.nval = NULL})
+
+#define NEW_ASSIGN(val) \
+    ast_new_node(NODE_ASSIGN, (ast_data_type){.sval = (val)})
+
+
 #define GUARD_AST_NODE__
 #endif

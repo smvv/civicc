@@ -26,67 +26,39 @@ unsigned int pass_for_to_do(ast_node *root)
         assert(AST_DATA_TYPE(node->children[1]) == NODE_FLAG_INT);
 
         // Create the initialization statement of the loop counter
-        ast_node *loop_counter = ast_new_node(NODE_ASSIGN,
-                        (ast_data_type){.sval = strdup(node->data.sval)});
-
-        ast_node_append(loop_counter, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.ival = node->children[0]->data.ival}),
-                    NODE_FLAG_INT));
+        ast_node *loop_counter = NEW_ASSIGN(strdup(node->data.sval));
+        ast_node_append(loop_counter, NEW_INT(node->children[0]->data.ival));
 
         // Create the body of the loop and the loop condition
         ast_node *do_body = node->children[node->nary - 1];
 
-        ast_node *if_cond = ast_new_node(NODE_BIN_OP,
-                (ast_data_type){.ival = OP_LT});
+        ast_node *if_cond = NEW_BIN_OP(OP_LT);
+        ast_node_append(if_cond, NEW_IDENT(strdup(node->data.sval)));
+        ast_node_append(if_cond, NEW_INT(node->children[1]->data.ival));
 
-        ast_node_append(if_cond, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.sval = strdup(node->data.sval)}),
-                    NODE_FLAG_IDENT));
-
-        ast_node_append(if_cond, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.ival = node->children[1]->data.ival}),
-                    NODE_FLAG_INT));
-
-        ast_node *do_stmt = ast_new_node(NODE_DO_WHILE,
-                (ast_data_type){.nval = NULL});
+        ast_node *do_stmt = NEW_DO_WHILE();
 
         ast_node_append(do_stmt, if_cond);
         ast_node_append(do_stmt, do_body);
 
         // Append loop counter increment statement to loop body
-        ast_node *counter_incr = ast_new_node(NODE_ASSIGN,
-                        (ast_data_type){.sval = strdup(node->data.sval)});
+        ast_node *counter_incr = NEW_ASSIGN(strdup(node->data.sval));
+        ast_node *counter_add = NEW_BIN_OP(OP_ADD);
 
-        ast_node *counter_add = ast_new_node(NODE_BIN_OP,
-                (ast_data_type){.ival = OP_ADD});
+        ast_node_append(counter_add, NEW_IDENT(strdup(node->data.sval)));
+        ast_node_append(counter_add, NEW_INT(
+                    node->nary == 4 ? node->children[2]->data.ival : 1));
 
         ast_node_append(counter_incr, counter_add);
-
-        ast_node_append(counter_add, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.sval = strdup(node->data.sval)}),
-                    NODE_FLAG_IDENT));
-
-        ast_node_append(counter_add, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.ival = node->nary == 4
-                            ? node->children[2]->data.ival : 1 }),
-                    NODE_FLAG_INT));
-
         ast_node_append(do_body, counter_incr);
 
         // Create if statement and its condition (e.g. "if (i < 4) ...")
-        if_cond = ast_new_node(NODE_BIN_OP,
-                (ast_data_type){.ival = OP_LT});
+        if_cond = NEW_BIN_OP(OP_LT);
 
-        ast_node_append(if_cond, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.sval = strdup(node->data.sval)}),
-                    NODE_FLAG_IDENT));
+        ast_node_append(if_cond, NEW_IDENT(strdup(node->data.sval)));
+        ast_node_append(if_cond, NEW_INT(node->children[1]->data.ival));
 
-        ast_node_append(if_cond, ast_flag_set(ast_new_node(NODE_CONST,
-                        (ast_data_type){.ival = node->children[1]->data.ival}),
-                    NODE_FLAG_INT));
-
-        ast_node *if_stmt = ast_new_node(NODE_IF,
-                (ast_data_type){.nval = NULL});
+        ast_node *if_stmt = NEW_IF();
 
         ast_node_append(if_stmt, if_cond);
         ast_node_append(if_stmt, do_stmt);

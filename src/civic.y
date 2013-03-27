@@ -37,6 +37,12 @@ extern char *yytext;
             stmts), \
         return)
 
+#undef NEW_FOR
+#undef NEW_BOOL
+#undef NEW_INT
+#undef NEW_FLOAT
+#undef NEW_IDENT
+
 #define NEW_FOR(ident, start, stop, step) \
     APPEND( \
         APPEND( \
