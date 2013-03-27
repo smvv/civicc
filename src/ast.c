@@ -174,8 +174,6 @@ ast_node *ast_node_clone(ast_node *node)
     if (!node)
         return NULL;
 
-    //printf("clone: %s\n", ast_node_type_name(AST_NODE_TYPE(node)));
-
     ast_node *new;
 
     switch (AST_NODE_TYPE(node)) {
