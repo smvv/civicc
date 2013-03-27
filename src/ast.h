@@ -182,6 +182,9 @@ int node_stack_contains(node_stack *stack, ast_node *node);
 #define NEW_ASSIGN(val) \
     ast_new_node(NODE_ASSIGN, (ast_data_type){.sval = (val)})
 
+#define NEW_VAR_DEC(val) \
+    ast_new_node(NODE_VAR_DEC, (ast_data_type){.sval = (val)})
+
 
 #define GUARD_AST_NODE__
 #endif

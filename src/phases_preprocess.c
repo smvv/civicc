@@ -6,29 +6,6 @@
 #include "ast_printer.h"
 #include "phases.h"
 
-//unsigned int pass_prune_empty_nodes(ast_node *root)
-//{
-//    unsigned int changed = 0;
-//
-//    AST_TRAVERSE_START(root, node)
-//
-//    if (node->nary == 0
-//            && AST_NODE_TYPE(node) != NODE_CONST
-//            && AST_NODE_TYPE(node) != NODE_VAR_DEC
-//            && AST_NODE_TYPE(node) != NODE_FN_HEAD) {
-//        ast_node_print(" == remove: %s ==\n", node);
-//
-//        node = ast_node_remove(node->parent, node);
-//        ast_free_node(node);
-//        node = NULL;
-//        changed = 1;
-//    }
-//
-//    AST_TRAVERSE_END(root, node)
-//
-//    return changed;
-//}
-
 unsigned int pass_split_var_init(ast_node *root)
 {
     ast_node *parent;
@@ -59,11 +36,9 @@ unsigned int pass_split_var_init(ast_node *root)
             if (!block)
                 return 1;
 
-            ast_node_insert(block, ast_new_node(NODE_ASSIGN,
-                        (ast_data_type){.sval = strdup(node->data.sval)}), 0);
-
-            ast_node_append(block->children[0], ast_node_remove(node,
-                        node->children[0]));
+            ast_node_insert(block, NEW_ASSIGN(strdup(node->data.sval)), 0);
+            ast_node_append(block->children[0],
+                            ast_node_remove(node, node->children[0]));
         } else {
             block = get_func_body_block(parent->parent, NODE_BLOCK_VARS);
 
@@ -77,20 +52,16 @@ unsigned int pass_split_var_init(ast_node *root)
             if (!block)
                 return 1;
 
-            ast_node_insert(block, ast_new_node(NODE_ASSIGN,
-                        (ast_data_type){.sval = strdup(node->data.sval)}), 0);
-
-            ast_node_append(block->children[0], ast_node_remove(node,
-                        node->children[0]));
+            ast_node_insert(block, NEW_ASSIGN(strdup(node->data.sval)), 0);
+            ast_node_append(block->children[0],
+                            ast_node_remove(node, node->children[0]));
         }
 
         ast_node_remove(node->parent, node);
         ast_free_node(node);
         node = NULL;
     } else if (AST_NODE_TYPE(node) == NODE_FOR) {
-        ast_node *var_dec = ast_new_node(NODE_VAR_DEC,
-                (ast_data_type){.sval = strdup(node->data.sval)});
-
+        ast_node *var_dec = NEW_VAR_DEC(strdup(node->data.sval));
         ast_flag_set(var_dec, NODE_FLAG_INT);
 
         block = get_func_body_block(find_func_body(node), NODE_BLOCK_VARS);
