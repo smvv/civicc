@@ -169,6 +169,57 @@ void ast_free_node(ast_node *node)
     ast_free_leaf(node);
 }
 
+ast_node *ast_node_clone(ast_node *node)
+{
+    if (!node)
+        return NULL;
+
+    //printf("clone: %s\n", ast_node_type_name(AST_NODE_TYPE(node)));
+
+    ast_node *new;
+
+    switch (AST_NODE_TYPE(node)) {
+        case NODE_FN_HEAD:
+        case NODE_VAR_DEC:
+        case NODE_VAR_DEF:
+        case NODE_PARAM:
+        case NODE_ASSIGN:
+        case NODE_CALL:
+        case NODE_FOR:
+            new = ast_new_node(AST_NODE_TYPE(node),
+                    (ast_data_type){.sval = strdup(node->data.sval)});
+        break;
+
+        case NODE_CONST:
+            if (AST_DATA_TYPE(node) == NODE_FLAG_IDENT) {
+                new = ast_new_node(AST_NODE_TYPE(node),
+                    (ast_data_type){.sval = strdup(node->data.sval)});
+
+                break;
+            }
+
+            /* fall through */
+        default:
+            new = ast_new_node(AST_NODE_TYPE(node),
+                    (ast_data_type){.sval = node->data.sval});
+        break;
+    }
+
+
+    if (!new)
+        return NULL;
+
+    new->type = node->type;
+    new->parent = node->parent;
+
+    unsigned int i;
+
+    for (i = 0; i < node->nary; i++)
+        ast_node_append(new, ast_node_clone(node->children[i]));
+
+    return new;
+}
+
 ast_node *ast_node_append(ast_node *parent, ast_node *child)
 {
     if (!parent)
